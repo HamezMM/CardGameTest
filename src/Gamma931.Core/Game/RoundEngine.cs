@@ -9,16 +9,44 @@ namespace Gamma931.Core.Game;
 /// (reveal a location, draw equipment, play a card, resolve an attack...) so the WPF UI can
 /// present the round structure interactively instead of auto-simulating it.
 ///
-/// Several numeric values (weapon damage, heal amounts, boss HP) are not pinned down anywhere in
+/// Several numeric values (weapon damage, heal amounts) are not pinned down anywhere in
 /// RULES.md/ROSTER.md yet — those are marked below and use clearly-placeholder defaults meant to
-/// be tuned once real playtesting starts. Most character/boss active abilities are still "TBD" in
-/// ROSTER.md and are not simulated; only the two fully-specified abilities (Medic's passive/active)
-/// are wired up as an example of how to extend this class as the rest of the roster firms up.
+/// be tuned once real playtesting starts. All 10 crab_bosses.csv abilities are wired up (their
+/// magnitudes came from tools/boss_ability_simulation.py — see BALANCE_NOTES.md), as is Medic's
+/// passive/active. Most *character* active abilities besides Medic's are still "TBD" in
+/// ROSTER.md and not simulated; Medic remains the template for wiring up the rest of the roster.
 /// </summary>
 public sealed class RoundEngine
 {
     private const int BaseHealAmount = 2; // TODO placeholder: not numerically specified in RULES.md
     private const string MedicCharacterName = "Medic";
+
+    // Boss ability magnitudes below come from tools/boss_ability_simulation.py's Monte Carlo
+    // tuning pass (see BALANCE_NOTES.md "Boss Ability Balance Pass") — chosen so drawing any one
+    // boss is roughly as threatening as any other, not picked by feel. Biome-specific bosses only
+    // get their ability when CrabBossCard.IsActiveAt the current location's biome; see
+    // CurrentBossAbilityActive.
+    private const string BroodmotherName = "Broodmother";
+    private const string SandreaverName = "Sandreaver";
+    private const string BogfatherName = "Bogfather";
+    private const string FrostclawName = "Frostclaw";
+    private const string VinewardenName = "Vinewarden";
+    private const string MagmapincerName = "Magmapincer";
+    private const string WreckstalkerName = "Wreckstalker";
+    private const string TideshellName = "Tideshell";
+
+    private const double BroodmotherExtraMinionChance = 0.15;
+    private const double SandreaverBonusDamageChance = 0.30;
+    private const int BogfatherHealAmount = 1;
+    private const double FrostclawFreezeChance = 0.40;
+    private const int VinewardenRegenPerTick = 1;
+    private const int VinewardenMaxRegenTicksPerRound = 2;
+    private const double MagmapincerBurnChance = 0.30;
+    private const int MagmapincerBurnDamage = 1;
+    private const double WreckstalkerAmbushChance = 0.25;
+    private const double TideshellSplitChance = 0.40;
+    private const int TideshellSplitMinTier = 2;
+    private const int TideshellSplitMinionsSpawned = 1;
 
     private readonly Random _random;
 
@@ -93,6 +121,9 @@ public sealed class RoundEngine
             player.ResetForNewRound();
         }
 
+        state.BossAbilityUsedThisRound = false;
+        state.BossAbilityTicksThisRound = 0;
+
         state.LogEvent($"Round {state.RoundNumber}: location revealed — {next.Name} ({next.Biome}).");
         state.Phase = GamePhase.EquipmentDraw;
     }
@@ -127,6 +158,23 @@ public sealed class RoundEngine
             ? " — its biome bonus is active here."
             : " — biome bonus inactive at this location.";
         state.LogEvent($"Boss revealed: {boss.Name}{activeNote}");
+
+        // Frostclaw: 40% chance/round to freeze one already-drawn card out of a random player's
+        // hand (RULES.md equipment is drawn before the boss is revealed, so "reduces equipment
+        // draw" has to act on the hand after the fact rather than the draw count itself).
+        if (CurrentBossAbilityActive(state, FrostclawName) && _random.NextDouble() < FrostclawFreezeChance)
+        {
+            var candidates = state.Players.Where(p => p.IsAlive && p.Hand.Count > 0).ToList();
+            if (candidates.Count > 0)
+            {
+                var victim = candidates[_random.Next(candidates.Count)];
+                var frozen = victim.Hand[_random.Next(victim.Hand.Count)];
+                victim.Hand.Remove(frozen);
+                state.EquipmentDeck.Discard(frozen);
+                state.LogEvent($"Frostclaw's chill freezes {frozen.Name} out of {victim.Name}'s hand.");
+            }
+        }
+
         state.Phase = GamePhase.CrabActionSetAside;
     }
 
@@ -154,6 +202,13 @@ public sealed class RoundEngine
         var location = RequireCurrentLocation(state);
         var count = Math.Max(1, location.MinionCountFor(state.Players.Count));
 
+        // Broodmother: 15% chance/round to breed 1 extra minion on top of the location's count.
+        if (CurrentBossAbilityActive(state, BroodmotherName) && _random.NextDouble() < BroodmotherExtraMinionChance)
+        {
+            count += 1;
+            state.LogEvent("Broodmother breeds — 1 extra minion joins the fight.");
+        }
+
         state.CurrentMinions.Clear();
         state.CurrentMinions.AddRange(state.CrabMinionDeck.Draw(count));
 
@@ -171,13 +226,27 @@ public sealed class RoundEngine
     {
         RequirePhase(state, GamePhase.CombatCycle);
 
+        // Vinewarden: regenerates 1 HP at the start of each of the first 2 combat cycles it
+        // survives per round (capped — see BALANCE_NOTES.md, an uncapped per-cycle regen was
+        // wildly overtuned).
+        if (CurrentBossAbilityActive(state, VinewardenName)
+            && state.CurrentBossHp > 0
+            && state.BossAbilityTicksThisRound < VinewardenMaxRegenTicksPerRound)
+        {
+            state.CurrentBossHp = Math.Min(state.CurrentBoss!.StartingHp, state.CurrentBossHp + VinewardenRegenPerTick);
+            state.BossAbilityTicksThisRound++;
+            state.LogEvent($"Vinewarden regrows {VinewardenRegenPerTick} HP (now {state.CurrentBossHp}/{state.CurrentBoss.StartingHp}).");
+        }
+
         state.CurrentCrabAction = state.CrabActionsThisRound.Count > 0
             ? state.CrabActionsThisRound.Dequeue()
             : null;
 
         if (state.CurrentCrabAction is { } action)
         {
-            var target = SelectCrabAttackTarget(state);
+            var attacker = SelectCrabAttacker(state);
+            state.PendingCrabActionAttacker = attacker;
+            var target = SelectAttackTargetWithAmbush(state, attacker);
             state.PendingCrabActionTarget = target;
             state.LogEvent($"Crab action: {action.Name} — {action.EffectText} (targeting {target.Name}).");
         }
@@ -199,8 +268,10 @@ public sealed class RoundEngine
         var target = state.PendingCrabActionTarget
             ?? throw new InvalidOperationException("No crab action attack is awaiting resolution.");
 
-        ResolveCrabAttack(state, target, blockingCard, state.CurrentCrabAction?.Name ?? "The crabs");
+        var attackerIsMinion = state.PendingCrabActionAttacker == "Minion";
+        ResolveCrabAttack(state, target, blockingCard, state.CurrentCrabAction?.Name ?? "The crabs", attackerIsMinion);
         state.PendingCrabActionTarget = null;
+        state.PendingCrabActionAttacker = null;
 
         if (CheckRoundEnd(state))
         {
@@ -257,7 +328,9 @@ public sealed class RoundEngine
     /// blocked by playing a protection equipment card as a response, out of turn." Pass the
     /// player's chosen Protection card to block, or null to take the hit.
     /// </summary>
-    public void ResolveCrabAttack(GameState state, Player target, EquipmentCard? blockingCard = null, string attackerLabel = "A crab")
+    public void ResolveCrabAttack(
+        GameState state, Player target, EquipmentCard? blockingCard = null, string attackerLabel = "A crab",
+        bool attackerIsMinion = false)
     {
         if (!target.IsAlive)
         {
@@ -279,9 +352,22 @@ public sealed class RoundEngine
 
         var damageCard = state.DamageDeck.Draw();
         state.DamageDeck.Discard(damageCard);
-        target.TakeDamage(damageCard.HpCost);
+        var amount = damageCard.HpCost;
+
+        // Sandreaver: minions have a 30% chance of +1 bonus damage against a range-position
+        // target. Boss attacks aren't affected — only its minions get the heat-seeking buff.
+        if (attackerIsMinion
+            && target.Position == Position.Range
+            && CurrentBossAbilityActive(state, SandreaverName)
+            && _random.NextDouble() < SandreaverBonusDamageChance)
+        {
+            amount += 1;
+            state.LogEvent("Sandreaver's burrowing minions strike with +1 bonus damage!");
+        }
+
+        target.TakeDamage(amount);
         state.LogEvent(
-            $"{attackerLabel} attacks {target.Name}: {damageCard.BodyLocation} hit for {damageCard.HpCost} HP " +
+            $"{attackerLabel} attacks {target.Name}: {damageCard.BodyLocation} hit for {amount} HP " +
             $"(now {target.CurrentHp}/{Player.MaxHp}).");
 
         if (!target.IsAlive)
@@ -320,6 +406,17 @@ public sealed class RoundEngine
     public void BeginEndPhaseCombat(GameState state)
     {
         state.Phase = GamePhase.EndPhaseCombat;
+
+        // Bogfather: heals 1 HP once per round, right before End Phase Combat begins. This method
+        // re-runs every End Phase iteration (RULES.md's "repeat until the round is over"), so the
+        // once-per-round latch matters — without it this would heal every iteration.
+        if (!state.BossAbilityUsedThisRound && CurrentBossAbilityActive(state, BogfatherName) && state.CurrentBossHp > 0)
+        {
+            state.CurrentBossHp = Math.Min(state.CurrentBoss!.StartingHp, state.CurrentBossHp + BogfatherHealAmount);
+            state.BossAbilityUsedThisRound = true;
+            state.LogEvent($"Bogfather passively heals {BogfatherHealAmount} HP (now {state.CurrentBossHp}/{state.CurrentBoss.StartingHp}).");
+        }
+
         state.LogEvent("Equipment hands exhausted — entering End Phase Combat.");
         state.PendingEquipmentTurns.Clear();
         foreach (var player in PlayersInTurnOrderFrom(state, state.FirstPlayerIndex).Where(p => p.IsAlive))
@@ -378,8 +475,11 @@ public sealed class RoundEngine
         }
 
         var attacker = state.PendingCrabAttacks.Dequeue();
-        var target = SelectCrabAttackTarget(state);
-        ResolveCrabAttack(state, target, blockingCard, attacker == "Boss" ? $"{state.CurrentBoss?.Name ?? "The boss"}" : "A minion");
+        var target = SelectAttackTargetWithAmbush(state, attacker);
+        ResolveCrabAttack(
+            state, target, blockingCard,
+            attacker == "Boss" ? $"{state.CurrentBoss?.Name ?? "The boss"}" : "A minion",
+            attackerIsMinion: attacker == "Minion");
 
         if (CheckRoundEnd(state))
         {
@@ -463,6 +563,32 @@ public sealed class RoundEngine
             state.LogEvent(
                 $"{player.Name} hits {boss.Name} with {card.Name} for {hits} " +
                 $"(boss HP: {state.CurrentBossHp}/{boss.StartingHp}).");
+
+            // Magmapincer: 30% chance/round, decided on the first hit that lands, to burn
+            // whoever dealt it for 1 unblockable damage.
+            if (!state.BossAbilityUsedThisRound && CurrentBossAbilityActive(state, MagmapincerName))
+            {
+                state.BossAbilityUsedThisRound = true;
+                if (_random.NextDouble() < MagmapincerBurnChance)
+                {
+                    player.TakeDamage(MagmapincerBurnDamage);
+                    state.LogEvent(
+                        $"Magmapincer's heat burns {player.Name} for {MagmapincerBurnDamage} HP " +
+                        $"(now {player.CurrentHp}/{Player.MaxHp}).");
+                }
+            }
+
+            // Tideshell: on the first tier-2+ hit that lands each round, 40% chance to split off
+            // 1 extra minion immediately.
+            if (!state.BossAbilityUsedThisRound && CurrentBossAbilityActive(state, TideshellName) && hits >= TideshellSplitMinTier)
+            {
+                state.BossAbilityUsedThisRound = true;
+                if (_random.NextDouble() < TideshellSplitChance)
+                {
+                    state.CurrentMinions.AddRange(state.CrabMinionDeck.Draw(TideshellSplitMinionsSpawned));
+                    state.LogEvent($"Tideshell splits — {TideshellSplitMinionsSpawned} extra minion(s) join the fight.");
+                }
+            }
         }
         else
         {
@@ -577,6 +703,56 @@ public sealed class RoundEngine
         }
 
         return state.PendingEquipmentTurns.Peek();
+    }
+
+    /// <summary>True if the current boss is <paramref name="bossName"/> and its ability is live —
+    /// always true for a Universal boss, only true for a BiomeSpecific one when the current
+    /// location's biome matches (CrabBossCard.IsActiveAt).</summary>
+    private static bool CurrentBossAbilityActive(GameState state, string bossName)
+    {
+        var boss = state.CurrentBoss;
+        if (boss is null || !string.Equals(boss.Name, bossName, StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        return boss.IsActiveAt(state.CurrentLocation?.Biome ?? string.Empty);
+    }
+
+    /// <summary>Picks which crab (the boss or a minion) is making the next attack, weighted by how
+    /// many of each are alive — mirrors tools/boss_ability_simulation.py's crab_pool selection so
+    /// attacker-specific abilities (Sandreaver on minions, Wreckstalker on the boss) fire at the
+    /// tuned rate during the main combat cycle, not just End Phase Combat.</summary>
+    private string SelectCrabAttacker(GameState state)
+    {
+        var minionCount = state.AliveMinionCount;
+        var bossAlive = state.CurrentBossHp > 0;
+        if (!bossAlive && minionCount == 0)
+        {
+            throw new InvalidOperationException("No crabs remain to attack.");
+        }
+
+        var bossWeight = bossAlive ? 1 : 0;
+        return _random.Next(bossWeight + minionCount) < bossWeight ? "Boss" : "Minion";
+    }
+
+    /// <summary>Normal Crab Attack Rules target selection, except Wreckstalker's own attacks have
+    /// a 25% chance to ambush the round's first player directly instead of following the usual
+    /// melee/range priority.</summary>
+    private Player SelectAttackTargetWithAmbush(GameState state, string attacker)
+    {
+        if (attacker == "Boss"
+            && CurrentBossAbilityActive(state, WreckstalkerName)
+            && _random.NextDouble() < WreckstalkerAmbushChance)
+        {
+            var firstPlayer = state.Players[state.FirstPlayerIndex];
+            if (firstPlayer.IsAlive)
+            {
+                return firstPlayer;
+            }
+        }
+
+        return SelectCrabAttackTarget(state);
     }
 
     private static LocationCard RequireCurrentLocation(GameState state) =>

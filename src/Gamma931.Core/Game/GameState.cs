@@ -34,6 +34,20 @@ public sealed class GameState
     /// resolution (so the target gets a chance to block before equipment turns continue).</summary>
     public Player? PendingCrabActionTarget { get; set; }
 
+    /// <summary>"Boss" or "Minion" — which crab DrawCrabAction picked to make the pending attack,
+    /// so ResolveCrabAction can apply attacker-specific boss abilities (e.g. Sandreaver only
+    /// buffs minion attacks).</summary>
+    public string? PendingCrabActionAttacker { get; set; }
+
+    /// <summary>Generic once-per-round latch for boss abilities that fire a single time each round
+    /// (Bogfather's heal, Magmapincer's burn, Tideshell's split). Safe to share across bosses since
+    /// only one boss is in play per round. Reset in <see cref="Gamma931.Core.Game.RoundEngine.RevealNextLocation"/>.</summary>
+    public bool BossAbilityUsedThisRound { get; set; }
+
+    /// <summary>Generic once-per-round counter for boss abilities capped at N triggers per round
+    /// (Vinewarden's regen). Reset alongside <see cref="BossAbilityUsedThisRound"/>.</summary>
+    public int BossAbilityTicksThisRound { get; set; }
+
     /// <summary>Players still owed an equipment play this combat cycle / End Phase pass.</summary>
     public Queue<Player> PendingEquipmentTurns { get; } = new();
 
