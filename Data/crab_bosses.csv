@@ -1,11 +1,11 @@
 Id,Name,Category,Biome,Concept,AbilityText,StartingHp
-BOSS-01,Alpha Drone,Universal,,"Straightforward baseline fight — no gimmick, good early/tutorial boss",TBD,6
-BOSS-02,Broodmother,Universal,,"Spawns an extra minion each round (breeds)",TBD,6
-BOSS-03,Ironshell,Universal,,"High resistance/armor — needs sustained hits to bring down",TBD,8
-BOSS-04,Sandreaver,BiomeSpecific,Desert,"Burrows — buffs minions' range-position targeting priority",TBD,6
-BOSS-05,Bogfather,BiomeSpecific,Swamp,"Passively heals each round it's in the swamp",TBD,6
-BOSS-06,Frostclaw,BiomeSpecific,Ice/Tundra,"Slows players — reduces equipment draw or freezes a card in hand",TBD,6
-BOSS-07,Vinewarden,BiomeSpecific,Jungle,"Regenerates HP tied to its jungle terrain bonus",TBD,6
-BOSS-08,Magmapincer,BiomeSpecific,Volcanic/Caves,"Deals burn damage over time to whoever last hit it",TBD,6
-BOSS-09,Wreckstalker,BiomeSpecific,Ruins/Wreckage,"Ambush — shifts crab targeting priority in its favor",TBD,6
-BOSS-10,Tideshell,BiomeSpecific,Coastal/Reef,"Splits into a minion copy when it takes heavy damage",TBD,6
+BOSS-01,Alpha Drone,Universal,,"Straightforward baseline fight — no gimmick, good early/tutorial boss","No special ability — the control-group boss every other boss is tuned against.",6
+BOSS-02,Broodmother,Universal,,"Spawns an extra minion each round (breeds)","Breeds: 15% chance each round to spawn 1 extra minion at the start of the fight, on top of the location's printed minion count.",6
+BOSS-03,Ironshell,Universal,,"High resistance/armor — needs sustained hits to bring down","Armor Plating: no special ability beyond its higher 8 HP pool — built to take sustained hits.",8
+BOSS-04,Sandreaver,BiomeSpecific,Desert,"Burrows — buffs minions' range-position targeting priority","Heat-Seeking Burrow: while active, minions have a 30% chance to deal +1 bonus damage when attacking a player in range position. Active only when Sandreaver is drawn at a Desert location; otherwise it fights as a plain 6 HP boss.",6
+BOSS-05,Bogfather,BiomeSpecific,Swamp,"Passively heals each round it's in the swamp","Swamp Regeneration: if still alive when hands run dry, heals 1 HP once before End Phase Combat begins. Active only when Bogfather is drawn at a Swamp location; otherwise it fights as a plain 6 HP boss.",6
+BOSS-06,Frostclaw,BiomeSpecific,Ice/Tundra,"Slows players — reduces equipment draw or freezes a card in hand","Chill: 40% chance each round to freeze one random player's hand, reducing that player's equipment draw for the round by 1 (minimum 1 card). Active only when Frostclaw is drawn at an Ice/Tundra location; otherwise it fights as a plain 6 HP boss.",6
+BOSS-07,Vinewarden,BiomeSpecific,Jungle,"Regenerates HP tied to its jungle terrain bonus","Regrowth: regenerates 1 HP at the end of each of the first 2 combat cycles it survives each round (max +2 HP/round). Active only when Vinewarden is drawn at a Jungle location; otherwise it fights as a plain 6 HP boss.",6
+BOSS-08,Magmapincer,BiomeSpecific,Volcanic/Caves,"Deals burn damage over time to whoever last hit it","Burn: 30% chance each round that the first player to damage Magmapincer that round takes 1 unblockable burn damage. Active only when Magmapincer is drawn at a Volcanic/Caves location; otherwise it fights as a plain 6 HP boss.",6
+BOSS-09,Wreckstalker,BiomeSpecific,Ruins/Wreckage,"Ambush — shifts crab targeting priority in its favor","Ambush: each of Wreckstalker's own attacks has a 25% chance to target the round's first player directly, ignoring the normal melee/range priority order. Active only when Wreckstalker is drawn at a Ruins/Wreckage location; otherwise it fights as a plain 6 HP boss.",6
+BOSS-10,Tideshell,BiomeSpecific,Coastal/Reef,"Splits into a minion copy when it takes heavy damage","Split: the first time it takes a tier-2 weapon hit each round, 40% chance to immediately spawn 1 extra minion. Active only when Tideshell is drawn at a Coastal/Reef location; otherwise it fights as a plain 6 HP boss.",6

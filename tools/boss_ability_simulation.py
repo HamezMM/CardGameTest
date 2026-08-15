@@ -248,3 +248,170 @@ if __name__ == "__main__":
         boss = {"hp": 8, "ability": None, "param": None}
         wr = win_rate(n, boss, 10000, seed=300 + n)
         print(f"  {n}p: {wr*100:5.1f}%  (baseline {base[n]*100:5.1f}%, Δ{(wr-base[n])*100:+.1f})")
+
+# --- refinement pass: probabilistic variants for the still-too-strong abilities ---
+
+def simulate_round_prob_variants(rng, n_players, hp, positions, minion_count, boss, first_player=0):
+    """Same as simulate_round but supports probability-gated freeze/burn/split/range-bonus."""
+    boss_max_hp = boss["hp"]
+    boss_hp = boss_max_hp
+    ability = boss["ability"]
+    param = boss.get("param")
+
+    equip_draw_n = EQUIP_DRAW[n_players]
+    frozen_player = None
+    if ability == "freeze_one_player_prob" and rng.random() < param:
+        frozen_player = rng.randrange(n_players)
+
+    protection = [0] * n_players
+    hands = []
+    for p in range(n_players):
+        n = equip_draw_n - 1 if (p == frozen_player) else equip_draw_n
+        n = max(1, n)
+        hands.append([random.choice(EQUIPMENT_DECK) for _ in range(n)])
+    hand_ptr = [0] * n_players
+    minions = minion_count
+
+    tideshell_used = False
+    magma_burn_used = False
+    magma_burn_roll = rng.random() < param if ability == "burn_once_per_round_prob" else False
+    range_bonus_roll = ability == "range_bonus_dmg_prob"
+    tideshell_roll = rng.random() < param[2] if ability == "split_prob" else False
+
+    def resolve_card(card, actor):
+        nonlocal boss_hp, minions, tideshell_used, magma_burn_used
+        ctype, tier = card
+        if ctype == "Melee":
+            positions[actor] = "melee"
+        elif ctype == "Ranged":
+            positions[actor] = "range"
+
+        if ctype in ("Melee", "Ranged"):
+            if minions > 0:
+                minions -= 1
+            else:
+                dealt = min(tier, boss_hp)
+                boss_hp = max(0, boss_hp - tier)
+                if dealt > 0 and ability == "burn_once_per_round_prob" and magma_burn_roll and not magma_burn_used:
+                    hp[actor] = max(0, hp[actor] - 1)
+                    magma_burn_used = True
+                if dealt > 0 and ability == "split_prob" and tideshell_roll and not tideshell_used and tier >= param[0]:
+                    minions += param[1]
+                    tideshell_used = True
+        elif ctype == "Healing":
+            alive = [i for i in range(n_players) if hp[i] > 0]
+            if alive:
+                t = min(alive, key=lambda i: hp[i])
+                hp[t] = min(PLAYER_HP, hp[t] + HEAL_AMOUNT)
+        elif ctype == "Protection":
+            protection[actor] += 1
+
+    def crab_attack_local():
+        alive_idxs = [i for i in range(len(hp)) if hp[i] > 0]
+        if not alive_idxs:
+            return
+        crab_pool = (["boss"] if boss_hp > 0 else []) + ["minion"] * minions
+        if not crab_pool:
+            return
+        attacker = rng.choice(crab_pool)
+        target = pick_target(rng, alive_idxs, positions)
+        dmg = draw_damage(rng)
+        if attacker == "minion" and range_bonus_roll and positions[target] == "range" and rng.random() < param:
+            dmg += 1
+        if protection[target] > 0:
+            protection[target] -= 1
+            return
+        hp[target] = max(0, hp[target] - dmg)
+
+    cycles = equip_draw_n
+    for _ in range(cycles):
+        if boss_hp <= 0 and minions <= 0:
+            return True
+        if all(h <= 0 for h in hp):
+            return False
+        crab_attack_local()
+        if all(h <= 0 for h in hp):
+            return False
+        for p in range(n_players):
+            if boss_hp <= 0 and minions <= 0:
+                break
+            if hp[p] <= 0 or hand_ptr[p] >= len(hands[p]):
+                continue
+            card = hands[p][hand_ptr[p]]
+            hand_ptr[p] += 1
+            if card[0] == "Protection":
+                protection[p] += 1
+                continue
+            resolve_card(card, p)
+
+    if boss_hp <= 0 and minions <= 0:
+        return True
+
+    for _ in range(END_PHASE_MAX_ITERS):
+        if all(h <= 0 for h in hp):
+            return False
+        for p in range(n_players):
+            if boss_hp <= 0 and minions <= 0:
+                break
+            if hp[p] <= 0:
+                continue
+            card = random.choice(EQUIPMENT_DECK)
+            if card[0] == "Protection":
+                protection[p] += 1
+                continue
+            resolve_card(card, p)
+        if boss_hp <= 0 and minions <= 0:
+            return True
+        if all(h <= 0 for h in hp):
+            return False
+        alive_crabs = (["boss"] if boss_hp > 0 else []) + ["minion"] * minions
+        for _ in alive_crabs:
+            if all(h <= 0 for h in hp):
+                return False
+            crab_attack_local()
+    return boss_hp <= 0 and minions <= 0
+
+
+def simulate_game_prob(rng, n_players, boss, minion_count=None):
+    mc = minion_count if minion_count is not None else REF_MINIONS[n_players]
+    hp = [PLAYER_HP] * n_players
+    positions = ["range"] * n_players
+    for _ in range(5):
+        if not simulate_round_prob_variants(rng, n_players, hp, positions, mc, boss):
+            return False
+        if all(h <= 0 for h in hp):
+            return False
+    return True
+
+
+def win_rate_prob(n_players, boss, trials, seed):
+    rng = random.Random(seed)
+    wins = sum(simulate_game_prob(rng, n_players, boss) for _ in range(trials))
+    return wins / trials
+
+
+def tune_prob(name, ability, param_values, base, trials=10000):
+    print(f"\n{name} ({ability}) refinement:")
+    best = None
+    for param in param_values:
+        boss = {"hp": 6, "ability": ability, "param": param}
+        diffs, line = [], []
+        for n in (3, 4, 5):
+            wr = win_rate_prob(n, boss, trials, seed=hash((name, str(param), n, "v2")) % (2**31))
+            diffs.append(abs(wr - base[n]))
+            line.append(f"{n}p:{wr*100:5.1f}%(Δ{(wr-base[n])*100:+5.1f})")
+        avg_diff = sum(diffs) / len(diffs)
+        print(f"  param={param!s:10} " + " ".join(line) + f"  avg|Δ|={avg_diff*100:4.1f}")
+        if best is None or avg_diff < best[0]:
+            best = (avg_diff, param)
+    print(f"  BEST param = {best[1]}")
+    return best[1]
+
+
+if __name__ == "__main__":
+    print("\n\n=== REFINEMENT PASS ===")
+    _base = baseline()
+    tune_prob("Frostclaw", "freeze_one_player_prob", [0.4, 0.6, 0.8], _base)
+    tune_prob("Magmapincer", "burn_once_per_round_prob", [0.3, 0.5, 0.7], _base)
+    tune_prob("Sandreaver", "range_bonus_dmg_prob", [0.3, 0.5, 0.7], _base)
+    tune_prob("Tideshell", "split_prob", [(2, 1, 0.4), (2, 1, 0.6), (2, 1, 0.8)], _base)

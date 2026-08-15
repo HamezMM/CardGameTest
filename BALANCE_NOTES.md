@@ -106,3 +106,81 @@ Crawler, Tide Snapper) to cover the max simultaneous draw.
 `Data/physical_card_assignments.csv` was regenerated accordingly: 83 of the
 104 physical cards (two standard decks) are now assigned (was 79), leaving
 21 reserved for future content (was 25).
+
+---
+
+# Boss Ability Balance Pass
+
+## Goal
+
+`crab_bosses.csv`'s `AbilityText` was `TBD` for all 10 bosses — ROSTER.md only had
+one-line concepts ("spawns an extra minion each round," "passively heals," etc.), no
+numbers. This pass turns each concept into a concrete, numbered ability and tunes its
+magnitude so that **drawing any one boss is roughly as threatening as drawing any
+other** — parity across the shared 10-card boss deck, rather than a single global
+win-rate target (that's what the minion pass solved; this pass solves for boss-to-boss
+fairness on top of it).
+
+## Method
+
+`tools/boss_ability_simulation.py` extends the minion-pass combat model
+(`tools/balance_simulation.py`) with per-boss ability hooks, then:
+1. Establishes Alpha Drone (no ability) as the control baseline per player count, at a
+   fixed reference minion count (the tuned locations.csv "low"/majority value: 2p=1,
+   3p=4, 4p=7, 5p=8).
+2. For each other boss, sweeps its ability's magnitude with that boss drawn **every
+   round** (an isolated worst-case stress test — see the biome-gating note below) and
+   picks the value whose win rate deviates least from Alpha Drone's, averaged across
+   3p/4p/5p (2p excluded — already floor-locked per the minion pass, see above).
+
+**First-pass finding:** "every single trigger" designs are catastrophically strong.
+A flat +1 minion every round Broodmother is drawn cost ~26 percentage points of win
+rate on average — consistent with how steep the minion-count curve already is near the
+70% target (see the minion-count sweep tables above, where +1 minion routinely swings
+win rate by 15-30pp). Guaranteed-trigger burn damage, party-wide hand reduction, and
+uncapped per-cycle regen were all similarly overtuned even at their smallest tested
+magnitude. **Every ability below was redesigned around a probability or a cap** rather
+than a guaranteed trigger, then re-tuned — this is the same "buff, don't overload"
+restraint RULES.md's Character Design section already applies to players, extended to
+bosses.
+
+## Results (isolated, boss drawn every round)
+
+| Boss | Ability | 3p Δ | 4p Δ | 5p Δ | avg |Δ| |
+|---|---|---|---|---|---|
+| Alpha Drone | none (control) | — | — | — | — |
+| Ironshell | 8 HP only, no ability | -6.9 | -1.4 | -0.1 | (reference) |
+| Vinewarden | regen 1 HP/cycle, first 2 cycles/round (cap +2) | -0.1 | +0.1 | -0.1 | **0.1** |
+| Bogfather | heal 1 HP once, before End Phase | -0.9 | -0.1 | -0.1 | **0.4** |
+| Wreckstalker | 25% chance/attack: ambush the first player | +0.7 | +1.5 | +2.9 | **1.7** |
+| Sandreaver | minions: 30% chance +1 dmg vs. range position | -3.0 | -1.2 | -1.3 | **1.8** |
+| Magmapincer | 30% chance/round: 1 burn to first player to hit it | -4.8 | -2.7 | -1.3 | **2.9** |
+| Tideshell | first tier-2 hit/round: 40% chance to spawn 1 minion | -7.2 | -2.5 | -0.8 | **3.5** |
+| Broodmother | 15% chance/round: +1 extra minion | -6.5 | -6.6 | -7.4 | **4.3** |
+| Frostclaw | 40% chance/round: freeze 1 random player's hand -1 card | -4.0 | -4.3 | -4.6 | **4.3** |
+
+All 8 tunable abilities land within ~5pp of Alpha Drone's baseline — Ironshell (no
+ability, just +2 HP) is left as a natural reference point rather than force-matched,
+since "a beefier standard fight" is its whole concept.
+
+## Biome-gating means this is a deliberate worst case
+
+Per `CrabBossCard.IsActiveAt()` in the C# model, the 7 biome-specific bosses' abilities
+are only active when the drawn boss's biome matches the current location's biome —
+everywhere else they fight as a plain 6 HP boss, identical to Alpha Drone. This pass
+tuned magnitudes assuming the ability is **always** active (boss drawn every round),
+which is a deliberately pessimistic stress test: in real play, a biome-specific boss's
+ability only fires on a biome match, which happens well under half the time it's drawn
+(at most 1 of the 5 locations in a given game matches its biome, and it's competing
+against 9 other bosses in the shared draw). Real average difficulty is therefore softer
+than the table above — intentional headroom, not a gap to close.
+
+## Not yet wired into the engine
+
+Like Medic's passive/active (the only fully-wired character abilities so far), these
+boss abilities are **not yet implemented in `RoundEngine.cs`** — `crab_bosses.csv` now
+has real `AbilityText`, but the engine doesn't branch on it. That's follow-up work,
+same as the rest of the roster. Also unresolved: Biologist's passive explicitly
+*debuffs* "the current boss's biome bonus" — once Biologist's debuff magnitude is
+designed, re-run this pass with it applied, since it directly interacts with every
+biome-specific ability above.
