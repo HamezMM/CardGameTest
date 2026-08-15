@@ -235,6 +235,21 @@ public class BossAbilityTests
 
     // ---- Vinewarden: regenerates 1 HP/cycle, capped at the first 2 cycles it survives per round ----
 
+    /// <summary>Drives one full combat cycle — crab action draw through the last queued
+    /// equipment play — using only Utility cards (a pure no-op play, see
+    /// RoundEngine.ResolvePlayedEquipment), so the cycle completes and fires Vinewarden's
+    /// end-of-cycle regen check without any combat side effect on boss/player HP muddying the
+    /// assertions.</summary>
+    private static void PlayOutCombatCycle(RoundEngine engine, GameState state)
+    {
+        engine.DrawCrabAction(state);
+        while (state.PendingEquipmentTurns.Count > 0)
+        {
+            var player = state.PendingEquipmentTurns.Peek();
+            engine.PlayEquipmentFromHand(state, player.Hand[0]);
+        }
+    }
+
     [Fact]
     public void Vinewarden_RegeneratesUpToTwoTicksPerRound_ThenStops()
     {
@@ -243,18 +258,20 @@ public class BossAbilityTests
         var jungle = LocationFor(db, "Jungle");
         var random = new Random(7);
         var engine = new RoundEngine(random);
-        var state = BuildState(db, 2, boss, jungle, random);
+        var utilityCards = RepeatToFillDeck(db.Equipment.Where(e => e.EquipmentType == EquipmentType.Utility));
+        var state = BuildState(db, 2, boss, jungle, random, equipmentDeckCards: utilityCards);
 
         DriveToCombatCycle(engine, state);
+        state.CrabActionsThisRound.Clear(); // isolate the regen tick from crab-attack resolution
         state.CurrentBossHp = 1;
 
-        engine.DrawCrabAction(state);
+        PlayOutCombatCycle(engine, state);
         Assert.Equal(2, state.CurrentBossHp);
 
-        engine.DrawCrabAction(state);
+        PlayOutCombatCycle(engine, state);
         Assert.Equal(3, state.CurrentBossHp);
 
-        engine.DrawCrabAction(state);
+        PlayOutCombatCycle(engine, state);
         Assert.Equal(3, state.CurrentBossHp); // cap reached — third cycle does not regenerate
         Assert.Equal(2, state.BossAbilityTicksThisRound);
     }

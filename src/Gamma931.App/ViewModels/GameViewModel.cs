@@ -277,9 +277,9 @@ public sealed class GameViewModel : ObservableObject
                 BlockableCards.Add(card);
             }
         }
-        else if (_state.Phase == GamePhase.EndPhaseCrabAttacks)
+        else if (_state.Phase == GamePhase.EndPhaseCrabAttacks && _state.PendingCrabAttacks.Count > 0)
         {
-            var previewTarget = _engine.SelectCrabAttackTarget(_state);
+            var previewTarget = _engine.PeekNextCrabAttackTarget(_state);
             foreach (var card in previewTarget.Hand.Where(c => c.EquipmentType == EquipmentType.Protection))
             {
                 BlockableCards.Add(card);
