@@ -11,3 +11,7 @@ out/
 
 ## Test results
 TestResults/
+
+## Python (tools/ balance scripts)
+__pycache__/
+*.pyc
