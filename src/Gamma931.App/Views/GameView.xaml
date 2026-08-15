@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:models="clr-namespace:Gamma931.Core.Models;assembly=Gamma931.Core"
+             xmlns:controls="clr-namespace:Gamma931.App.Controls"
              mc:Ignorable="d"
              d:DesignHeight="700" d:DesignWidth="1000">
     <UserControl.Resources>
@@ -50,10 +51,16 @@
             <Border DockPanel.Dock="Top" Padding="0,0,0,10">
                 <StackPanel>
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock FontWeight="Bold" Text="{Binding PhaseText}" Margin="0,0,16,0" />
-                        <TextBlock Text="{Binding RoundText}" Margin="0,0,16,0" />
-                        <TextBlock Text="{Binding LocationText}" Margin="0,0,16,0" />
-                        <TextBlock Text="{Binding BossText}" Margin="0,0,16,0" />
+                        <Image Source="{Binding CurrentLocationCard, Converter={StaticResource CardImage}}"
+                               Width="34" Height="48" Margin="0,0,6,0"
+                               Visibility="{Binding CurrentLocationCard, Converter={StaticResource NullToCollapsed}}" />
+                        <Image Source="{Binding CurrentBossCard, Converter={StaticResource CardImage}}"
+                               Width="34" Height="48" Margin="0,0,10,0"
+                               Visibility="{Binding CurrentBossCard, Converter={StaticResource NullToCollapsed}}" />
+                        <TextBlock FontWeight="Bold" Text="{Binding PhaseText}" VerticalAlignment="Center" Margin="0,0,16,0" />
+                        <TextBlock Text="{Binding RoundText}" VerticalAlignment="Center" Margin="0,0,16,0" />
+                        <TextBlock Text="{Binding LocationText}" VerticalAlignment="Center" Margin="0,0,16,0" />
+                        <TextBlock Text="{Binding BossText}" VerticalAlignment="Center" Margin="0,0,16,0" />
                         <Button Content="New Game" Command="{Binding NewGameCommand}" Padding="6,2" />
                     </StackPanel>
                     <TextBlock Text="{Binding StatusMessage}" Foreground="Red" TextWrapping="Wrap" />
@@ -90,7 +97,7 @@
                     </DataGrid>
 
                     <TextBlock Text="Minions" FontWeight="Bold" Margin="0,8,0,0" />
-                    <ItemsControl ItemsSource="{Binding MinionsDisplay}">
+                    <ItemsControl ItemsSource="{Binding MinionsDisplay}" MaxHeight="150">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
                                 <WrapPanel />
@@ -98,9 +105,9 @@
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Border BorderBrush="Gray" BorderThickness="1" Padding="6,2" Margin="0,0,6,6">
-                                    <TextBlock Text="{Binding}" />
-                                </Border>
+                                <controls:CardFaceView Card="{Binding}" Title="{Binding Name}"
+                                                        FooterText="1 HP" AccentBrush="#FFA1522C"
+                                                        Width="80" Height="120" Margin="0,0,6,6" />
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
@@ -151,6 +158,10 @@
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate DataType="{x:Type models:EquipmentCard}">
                                     <Border BorderBrush="Gray" BorderThickness="1" Padding="8" Margin="0,0,0,6">
+                                        <DockPanel>
+                                        <controls:CardFaceView Card="{Binding}" Title="{Binding Name}"
+                                                                DockPanel.Dock="Left"
+                                                                Width="76" Height="114" Margin="0,0,10,0" />
                                         <StackPanel>
                                             <TextBlock Text="{Binding Name}" FontWeight="Bold" />
                                             <TextBlock Text="{Binding EffectText}" TextWrapping="Wrap" />
@@ -233,6 +244,7 @@
                                                 </TextBlock>
                                             </WrapPanel>
                                         </StackPanel>
+                                        </DockPanel>
                                     </Border>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
