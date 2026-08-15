@@ -70,6 +70,7 @@ locations appear in a given game (see `RULES.md` — location count is fixed at 
 - Numbers-balance pass: Brawler cleave formula, Biologist debuff magnitude, active-ability
   use-count-per-difficulty-level table.
 - ~~Full ability text for all 10 bosses~~ — done via simulation, see `crab_bosses.csv` and
-  `BALANCE_NOTES.md`. Still needs wiring into `RoundEngine.cs` (only Medic's abilities are
-  wired up so far, as a template) and validation against Biologist's debuff once that's
-  designed, since Biologist explicitly reduces these biome bonuses.
+  `BALANCE_NOTES.md`. ~~Still needs wiring into `RoundEngine.cs`~~ — all 10 are wired up
+  and covered by `tests/Gamma931.Core.Tests/BossAbilityTests.cs`. Still needs validation
+  against Biologist's debuff once that's designed, since Biologist explicitly reduces
+  these biome bonuses.

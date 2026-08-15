@@ -175,12 +175,34 @@ ability only fires on a biome match, which happens well under half the time it's
 against 9 other bosses in the shared draw). Real average difficulty is therefore softer
 than the table above — intentional headroom, not a gap to close.
 
-## Not yet wired into the engine
+## Wired into the engine
 
-Like Medic's passive/active (the only fully-wired character abilities so far), these
-boss abilities are **not yet implemented in `RoundEngine.cs`** — `crab_bosses.csv` now
-has real `AbilityText`, but the engine doesn't branch on it. That's follow-up work,
-same as the rest of the roster. Also unresolved: Biologist's passive explicitly
-*debuffs* "the current boss's biome bonus" — once Biologist's debuff magnitude is
-designed, re-run this pass with it applied, since it directly interacts with every
-biome-specific ability above.
+All 10 abilities are implemented in `RoundEngine.cs`, using the magnitudes from the
+table above, matching biome-gating via `CrabBossCard.IsActiveAt()`:
+- **Broodmother** — `DrawMinions` rolls the extra-minion chance.
+- **Sandreaver** — `ResolveCrabAttack` rolls the range-position bonus damage when the
+  attacker is a minion (RoundEngine now determines boss-vs-minion attacker identity for
+  every crab attack, main-cycle included, via `SelectCrabAttacker`, not just End Phase).
+- **Bogfather** — `BeginEndPhaseCombat` applies the once-per-round heal, latched by
+  `GameState.BossAbilityUsedThisRound` (that method re-runs every End Phase iteration).
+- **Frostclaw** — `DrawBoss` rolls the freeze and removes a card from a random player's
+  already-drawn hand (equipment is drawn *before* the boss is revealed per RULES.md, so
+  the ability acts on the hand after the fact rather than the draw count).
+- **Vinewarden** — `DrawCrabAction` applies the regen tick, capped via
+  `GameState.BossAbilityTicksThisRound`.
+- **Magmapincer** / **Tideshell** — `ResolveWeaponHit`'s boss-hit branch: each rolls once,
+  latched by `BossAbilityUsedThisRound`, on the first hit that lands (Tideshell only
+  counts tier-2+ hits).
+- **Wreckstalker** — `SelectAttackTargetWithAmbush` rolls the ambush before falling back
+  to the normal melee/range/first-player priority, used by both the main cycle and End
+  Phase Combat.
+- **Ironshell** / **Alpha Drone** — no code beyond `StartingHp`, already loaded from CSV.
+
+Covered by `tests/Gamma931.Core.Tests/BossAbilityTests.cs`, which forces each ability's
+probability roll deterministically (a `Random` subclass overriding `NextDouble()`) rather
+than hunting for a lucky seed.
+
+**Still open:** Biologist's passive explicitly *debuffs* "the current boss's biome
+bonus" — once Biologist's debuff magnitude is designed, re-run this pass with it applied,
+since it directly interacts with every biome-specific ability above. Character active
+abilities besides Medic's remain `TBD` and unwired, same as before this pass.
