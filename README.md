@@ -65,3 +65,14 @@ exact column names expected. A few things to know:
   — the biome itself goes in the `Biome` column.
 - Blank cells in `characters.csv`'s `ActiveUses*` columns mean that character's active-ability
   use count isn't balanced yet.
+
+## Physical card assignments
+
+For the physical (print-and-play) version of the game, every card artifact — characters,
+crab bosses, crab minions, crab actions, locations, equipment, and damage cards — maps to a
+specific card across two standard 52-card decks (104 cards total, no jokers). That mapping is
+recorded in [`Data/physical_card_assignments.csv`](Data/physical_card_assignments.csv):
+`PhysicalCard` is `<Rank><Suit>-<Deck>` (e.g. `AS-A` = Ace of Spades, Deck A), and each row
+also names which artifact (by category, ID, and name) that physical card represents. All 79
+current artifacts are assigned; the remaining 25 physical cards are marked `Unused (Reserved)`
+for future content (new equipment, bosses, etc.).
