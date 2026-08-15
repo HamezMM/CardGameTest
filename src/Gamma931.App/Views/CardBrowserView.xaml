@@ -3,8 +3,27 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:controls="clr-namespace:Gamma931.App.Controls"
              mc:Ignorable="d"
              d:DesignHeight="600" d:DesignWidth="900">
+    <UserControl.Resources>
+        <ItemsPanelTemplate x:Key="GalleryPanel">
+            <WrapPanel Orientation="Horizontal" />
+        </ItemsPanelTemplate>
+
+        <Style x:Key="GalleryItemsControl" TargetType="ItemsControl">
+            <Setter Property="ItemsPanel" Value="{StaticResource GalleryPanel}" />
+            <Setter Property="Margin" Value="4" />
+            <Setter Property="ItemContainerStyle">
+                <Setter.Value>
+                    <Style TargetType="ContentPresenter">
+                        <Setter Property="Margin" Value="6" />
+                    </Style>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
     <DockPanel Margin="10">
         <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,10">
             <TextBlock Text="Search:" VerticalAlignment="Center" Margin="0,0,6,0" />
@@ -13,32 +32,115 @@
 
         <TabControl>
             <TabItem Header="Characters">
-                <DataGrid ItemsSource="{Binding Characters}" IsReadOnly="True" AutoGenerateColumns="True" />
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <ItemsControl ItemsSource="{Binding Characters}" Style="{StaticResource GalleryItemsControl}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <controls:CardFaceView Card="{Binding}"
+                                                        Title="{Binding Name}"
+                                                        Subtitle="{Binding Role}"
+                                                        BodyText="{Binding Passive}"
+                                                        AccentBrush="#FF4A7FA5" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
             </TabItem>
+
             <TabItem Header="Bosses">
-                <DataGrid ItemsSource="{Binding Bosses}" IsReadOnly="True" AutoGenerateColumns="True" />
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <ItemsControl ItemsSource="{Binding Bosses}" Style="{StaticResource GalleryItemsControl}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <controls:CardFaceView Card="{Binding}"
+                                                        Title="{Binding Name}"
+                                                        Subtitle="{Binding Concept}"
+                                                        BodyText="{Binding AbilityText}"
+                                                        FooterText="{Binding StartingHp, StringFormat={}{0} HP}"
+                                                        AccentBrush="#FFA83A1C" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
             </TabItem>
+
             <TabItem Header="Minions">
-                <DataGrid ItemsSource="{Binding Minions}" IsReadOnly="True" AutoGenerateColumns="True" />
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <ItemsControl ItemsSource="{Binding Minions}" Style="{StaticResource GalleryItemsControl}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <controls:CardFaceView Card="{Binding}"
+                                                        Title="{Binding Name}"
+                                                        Subtitle="Crab Minion"
+                                                        FooterText="1 HP"
+                                                        AccentBrush="#FFA1522C" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
             </TabItem>
+
             <TabItem Header="Crab Actions">
-                <DataGrid ItemsSource="{Binding CrabActions}" IsReadOnly="True" AutoGenerateColumns="True" />
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <ItemsControl ItemsSource="{Binding CrabActions}" Style="{StaticResource GalleryItemsControl}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <controls:CardFaceView Card="{Binding}"
+                                                        Title="{Binding Name}"
+                                                        Subtitle="Crab Action"
+                                                        BodyText="{Binding EffectText}"
+                                                        AccentBrush="#FFC99A4A" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
             </TabItem>
+
             <TabItem Header="Damage">
-                <DataGrid ItemsSource="{Binding DamageCards}" IsReadOnly="True" AutoGenerateColumns="True" />
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <ItemsControl ItemsSource="{Binding DamageCards}" Style="{StaticResource GalleryItemsControl}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <controls:CardFaceView Card="{Binding}"
+                                                        Title="{Binding BodyLocation}"
+                                                        Subtitle="Damage"
+                                                        FooterText="{Binding HpCost, StringFormat={}{0} HP}"
+                                                        AccentBrush="#FF8A3A6E" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
             </TabItem>
+
             <TabItem Header="Equipment">
-                <DataGrid ItemsSource="{Binding Equipment}" IsReadOnly="True" AutoGenerateColumns="True" />
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <ItemsControl ItemsSource="{Binding Equipment}" Style="{StaticResource GalleryItemsControl}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <controls:CardFaceView Card="{Binding}"
+                                                        Title="{Binding Name}"
+                                                        Subtitle="{Binding EquipmentType}"
+                                                        BodyText="{Binding EffectText}"
+                                                        AccentBrush="#FF6C6C93" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
             </TabItem>
+
             <TabItem Header="Locations">
-                <DataGrid ItemsSource="{Binding Locations}" IsReadOnly="True" AutoGenerateColumns="False">
-                    <DataGrid.Columns>
-                        <DataGridTextColumn Header="Id" Binding="{Binding Id}" />
-                        <DataGridTextColumn Header="Name" Binding="{Binding Name}" />
-                        <DataGridTextColumn Header="Biome" Binding="{Binding Biome}" />
-                        <DataGridCheckBoxColumn Header="Shuttle" Binding="{Binding IsShuttle}" />
-                    </DataGrid.Columns>
-                </DataGrid>
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <ItemsControl ItemsSource="{Binding Locations}" Style="{StaticResource GalleryItemsControl}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <controls:CardFaceView Card="{Binding}"
+                                                        Title="{Binding Name}"
+                                                        Subtitle="{Binding Biome}"
+                                                        AccentBrush="#FF2C9AA8" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
             </TabItem>
         </TabControl>
     </DockPanel>

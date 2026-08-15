@@ -25,9 +25,34 @@ src/
   Gamma931.App/               WPF UI (net8.0-windows)
     Views/                   CardBrowserView (search/filter all loaded cards), GameView (Play tab)
     ViewModels/               Hand-rolled MVVM (no external framework dependency)
+    Controls/                CardFaceView -- the generic card widget every card-shaped surface builds on
+    Converters/              CardToImagePathConverter binds any card model straight to its art
+    Services/                CardImageCatalog maps a card model to its Assets/Cards/... image path
+    Assets/Cards/            Generated card face art (see tools/generate_card_art.py below)
 tests/
   Gamma931.Core.Tests/        xUnit tests for CSV loading and the round engine
 ```
+
+## Card art
+
+Every card gets flat-icon face art, generated procedurally by
+[`tools/generate_card_art.py`](tools/generate_card_art.py) (Python + Pillow) straight from the
+CSVs in `/Data` -- there's no hand-authored art to keep in sync. Each category gets its own
+color palette and icon set (character role, boss biome, equipment type, location biome, ...),
+with per-card variety from a deterministic seed on the card's Id, so re-running the script is a
+no-op unless `/Data` changed. Output goes to `src/Gamma931.App/Assets/Cards/<category>/<id>.png`
+(one PNG per character/boss/minion/equipment/location/crab-action Id, plus one per damage
+`BodyLocation` since damage cards have no individual name, plus a shared card back), built into
+the app as WPF `Resource` items. Re-run it after adding or renaming a card:
+
+```
+pip install Pillow
+python3 tools/generate_card_art.py
+```
+
+`CardFaceView` (`src/Gamma931.App/Controls`) is the reusable widget that renders a card's art plus
+its name/flavor/effect text; `CardImageCatalog` + `CardToImagePathConverter` are what let any of
+the seven card model types bind straight to their art without each view re-deriving the path.
 
 `RoundEngine` drives a `GameState` through RULES.md's round structure one explicit step at a
 time (reveal location → draw equipment → draw boss → set aside crab actions → draw minions →

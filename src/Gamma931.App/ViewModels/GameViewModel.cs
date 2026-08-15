@@ -123,13 +123,17 @@ public sealed class GameViewModel : ObservableObject
     public string BossText => _state?.CurrentBoss is { } boss ? $"{boss.Name} — {_state.CurrentBossHp}/{boss.StartingHp} HP" : "—";
     public string CrabActionText => _state?.CurrentCrabAction is { } action ? $"{action.Name}: {action.EffectText}" : "—";
 
+    /// <summary>Current location/boss card objects, exposed alongside the *Text summaries above so CardFaceView can look up their art.</summary>
+    public LocationCard? CurrentLocationCard => _state?.CurrentLocation;
+    public CrabBossCard? CurrentBossCard => _state?.CurrentBoss;
+
     public string PendingAttackText => _state?.PendingCrabActionTarget is { } target
         ? $"The crab action is attacking {target.Name} — block or take the hit."
         : string.Empty;
 
     public bool HasPendingCrabAction => _state?.PendingCrabActionTarget is not null;
 
-    public ObservableCollection<string> MinionsDisplay { get; } = new();
+    public ObservableCollection<CrabMinionCard> MinionsDisplay { get; } = new();
     public ObservableCollection<PlayerDisplay> PlayersDisplay { get; } = new();
     public ObservableCollection<EquipmentCard> CurrentHand { get; } = new();
     public ObservableCollection<EquipmentCard> BlockableCards { get; } = new();
@@ -210,6 +214,8 @@ public sealed class GameViewModel : ObservableObject
         OnPropertyChanged(nameof(RoundText));
         OnPropertyChanged(nameof(LocationText));
         OnPropertyChanged(nameof(BossText));
+        OnPropertyChanged(nameof(CurrentLocationCard));
+        OnPropertyChanged(nameof(CurrentBossCard));
         OnPropertyChanged(nameof(CrabActionText));
         OnPropertyChanged(nameof(PendingAttackText));
         OnPropertyChanged(nameof(HasPendingCrabAction));
@@ -233,7 +239,7 @@ public sealed class GameViewModel : ObservableObject
 
         foreach (var minion in _state.CurrentMinions)
         {
-            MinionsDisplay.Add(minion.Name);
+            MinionsDisplay.Add(minion);
         }
 
         var upNext = CurrentTurnPlayer;
