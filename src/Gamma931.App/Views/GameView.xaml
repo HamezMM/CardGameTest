@@ -1,0 +1,274 @@
+<UserControl x:Class="Gamma931.App.Views.GameView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:models="clr-namespace:Gamma931.Core.Models;assembly=Gamma931.Core"
+             mc:Ignorable="d"
+             d:DesignHeight="700" d:DesignWidth="1000">
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+    </UserControl.Resources>
+
+    <Grid Margin="10">
+
+        <!-- ============ SETUP ============ -->
+        <StackPanel Visibility="{Binding IsSetupPhase, Converter={StaticResource BoolToVis}}" MaxWidth="500" HorizontalAlignment="Left">
+            <TextBlock Text="New Game" FontSize="20" FontWeight="Bold" Margin="0,0,0,10" />
+
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                <TextBlock Text="Players:" Width="90" VerticalAlignment="Center" />
+                <ComboBox Width="80" ItemsSource="{Binding PlayerCountOptions}" SelectedItem="{Binding PlayerCount}" />
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                <TextBlock Text="Difficulty:" Width="90" VerticalAlignment="Center" />
+                <ComboBox Width="120" ItemsSource="{Binding DifficultyOptions}" SelectedItem="{Binding SelectedDifficulty}" />
+            </StackPanel>
+
+            <ItemsControl ItemsSource="{Binding SetupRows}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                            <TextBox Width="150" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,8,0" />
+                            <ComboBox Width="220"
+                                      ItemsSource="{Binding DataContext.AvailableCharacters, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                      SelectedItem="{Binding Character}" />
+                        </StackPanel>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <Button Content="Start Game" Command="{Binding StartGameCommand}" Margin="0,10,0,0" Padding="10,4" HorizontalAlignment="Left" />
+            <TextBlock Text="{Binding StatusMessage}" Foreground="Red" Margin="0,8,0,0" TextWrapping="Wrap" />
+        </StackPanel>
+
+        <!-- ============ GAME ============ -->
+        <DockPanel Visibility="{Binding IsGameActive, Converter={StaticResource BoolToVis}}">
+
+            <!-- status bar -->
+            <Border DockPanel.Dock="Top" Padding="0,0,0,10">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock FontWeight="Bold" Text="{Binding PhaseText}" Margin="0,0,16,0" />
+                        <TextBlock Text="{Binding RoundText}" Margin="0,0,16,0" />
+                        <TextBlock Text="{Binding LocationText}" Margin="0,0,16,0" />
+                        <TextBlock Text="{Binding BossText}" Margin="0,0,16,0" />
+                        <Button Content="New Game" Command="{Binding NewGameCommand}" Padding="6,2" />
+                    </StackPanel>
+                    <TextBlock Text="{Binding StatusMessage}" Foreground="Red" TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
+
+            <!-- event log -->
+            <Border DockPanel.Dock="Right" Width="320" BorderThickness="1,0,0,0" BorderBrush="Gray" Padding="10,0,0,0">
+                <DockPanel>
+                    <TextBlock DockPanel.Dock="Top" Text="Log" FontWeight="Bold" Margin="0,0,0,6" />
+                    <ListBox ItemsSource="{Binding LogLines}" />
+                </DockPanel>
+            </Border>
+
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <!-- players + minions -->
+                <StackPanel Grid.Row="0" Margin="0,0,0,10">
+                    <TextBlock Text="Crew" FontWeight="Bold" />
+                    <DataGrid ItemsSource="{Binding PlayersDisplay}" IsReadOnly="True" AutoGenerateColumns="False" MaxHeight="160">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Player" Binding="{Binding Name}" />
+                            <DataGridTextColumn Header="Character" Binding="{Binding CharacterName}" />
+                            <DataGridTextColumn Header="HP" Binding="{Binding CurrentHp}" />
+                            <DataGridTextColumn Header="Position" Binding="{Binding Position}" />
+                            <DataGridTextColumn Header="Hand" Binding="{Binding HandCount}" />
+                            <DataGridCheckBoxColumn Header="Alive" Binding="{Binding IsAlive}" />
+                            <DataGridCheckBoxColumn Header="Up Next" Binding="{Binding IsUpNext}" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <TextBlock Text="Minions" FontWeight="Bold" Margin="0,8,0,0" />
+                    <ItemsControl ItemsSource="{Binding MinionsDisplay}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border BorderBrush="Gray" BorderThickness="1" Padding="6,2" Margin="0,0,6,6">
+                                    <TextBlock Text="{Binding}" />
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+
+                <!-- round-structure / combat actions -->
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+
+                        <TextBlock Text="Round Structure" FontWeight="Bold" Margin="0,0,0,4" />
+                        <WrapPanel Margin="0,0,0,10">
+                            <Button Content="Reveal Location" Command="{Binding RevealLocationCommand}" Margin="0,0,6,6" Padding="8,4" />
+                            <Button Content="Draw Equipment" Command="{Binding DrawEquipmentCommand}" Margin="0,0,6,6" Padding="8,4" />
+                            <Button Content="Draw Boss" Command="{Binding DrawBossCommand}" Margin="0,0,6,6" Padding="8,4" />
+                            <Button Content="Set Aside Crab Actions" Command="{Binding SetAsideCrabActionsCommand}" Margin="0,0,6,6" Padding="8,4" />
+                            <Button Content="Draw Minions" Command="{Binding DrawMinionsCommand}" Margin="0,0,6,6" Padding="8,4" />
+                            <Button Content="Advance to Next Round" Command="{Binding AdvanceRoundCommand}" Margin="0,0,6,6" Padding="8,4" />
+                        </WrapPanel>
+
+                        <TextBlock Text="Combat Cycle" FontWeight="Bold" Margin="0,0,0,4" />
+                        <Button Content="Draw Crab Action" Command="{Binding DrawCrabActionCommand}" HorizontalAlignment="Left" Margin="0,0,0,8" Padding="8,4" />
+
+                        <StackPanel Visibility="{Binding HasPendingCrabAction, Converter={StaticResource BoolToVis}}" Margin="0,0,0,10">
+                            <TextBlock Text="{Binding CrabActionText}" FontStyle="Italic" />
+                            <TextBlock Text="{Binding PendingAttackText}" Foreground="DarkRed" Margin="0,2,0,6" />
+                            <WrapPanel>
+                                <Button Content="Take the Hit" Command="{Binding TakeCrabHitCommand}" Margin="0,0,6,6" Padding="8,4" />
+                                <ItemsControl ItemsSource="{Binding BlockableCards}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <WrapPanel />
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate DataType="{x:Type models:EquipmentCard}">
+                                            <Button Content="{Binding Name, StringFormat='Block with {0}'}"
+                                                    Command="{Binding DataContext.BlockCrabActionCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                    CommandParameter="{Binding}"
+                                                    Margin="0,0,6,6" Padding="8,4" />
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </WrapPanel>
+                        </StackPanel>
+
+                        <TextBlock Text="{Binding CurrentTurnText}" FontWeight="Bold" Margin="0,4,0,4" />
+                        <ItemsControl ItemsSource="{Binding CurrentHand}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="{x:Type models:EquipmentCard}">
+                                    <Border BorderBrush="Gray" BorderThickness="1" Padding="8" Margin="0,0,0,6">
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding Name}" FontWeight="Bold" />
+                                            <TextBlock Text="{Binding EffectText}" TextWrapping="Wrap" />
+                                            <WrapPanel Margin="0,4,0,0">
+                                                <Button Content="Hit Boss"
+                                                        Command="{Binding DataContext.HitBossCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                        CommandParameter="{Binding}" Margin="0,0,6,0" Padding="8,4">
+                                                    <Button.Style>
+                                                        <Style TargetType="Button">
+                                                            <Setter Property="Visibility" Value="Collapsed" />
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding EquipmentType}" Value="Melee">
+                                                                    <Setter Property="Visibility" Value="Visible" />
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding EquipmentType}" Value="Ranged">
+                                                                    <Setter Property="Visibility" Value="Visible" />
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Button.Style>
+                                                </Button>
+                                                <Button Content="Hit Minions"
+                                                        Command="{Binding DataContext.HitMinionsCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                        CommandParameter="{Binding}" Margin="0,0,6,0" Padding="8,4">
+                                                    <Button.Style>
+                                                        <Style TargetType="Button">
+                                                            <Setter Property="Visibility" Value="Collapsed" />
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding EquipmentType}" Value="Melee">
+                                                                    <Setter Property="Visibility" Value="Visible" />
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding EquipmentType}" Value="Ranged">
+                                                                    <Setter Property="Visibility" Value="Visible" />
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Button.Style>
+                                                </Button>
+                                                <Button Content="Heal Self"
+                                                        Command="{Binding DataContext.HealSelfCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                        CommandParameter="{Binding}" Margin="0,0,6,0" Padding="8,4">
+                                                    <Button.Style>
+                                                        <Style TargetType="Button">
+                                                            <Setter Property="Visibility" Value="Collapsed" />
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding EquipmentType}" Value="Healing">
+                                                                    <Setter Property="Visibility" Value="Visible" />
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Button.Style>
+                                                </Button>
+                                                <Button Content="Play"
+                                                        Command="{Binding DataContext.PlayUtilityCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                        CommandParameter="{Binding}" Margin="0,0,6,0" Padding="8,4">
+                                                    <Button.Style>
+                                                        <Style TargetType="Button">
+                                                            <Setter Property="Visibility" Value="Collapsed" />
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding EquipmentType}" Value="Utility">
+                                                                    <Setter Property="Visibility" Value="Visible" />
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Button.Style>
+                                                </Button>
+                                                <TextBlock VerticalAlignment="Center" FontStyle="Italic" Foreground="Gray">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Setter Property="Visibility" Value="Collapsed" />
+                                                            <Setter Property="Text" Value="" />
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding EquipmentType}" Value="Protection">
+                                                                    <Setter Property="Visibility" Value="Visible" />
+                                                                    <Setter Property="Text" Value="Held — plays only as a block against a crab attack." />
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                            </WrapPanel>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <TextBlock Text="End Phase Combat" FontWeight="Bold" Margin="0,10,0,4"
+                                   Visibility="{Binding IsEndPhaseDraw, Converter={StaticResource BoolToVis}}" />
+                        <Button Content="Draw &amp; Resolve (End Phase)" Command="{Binding EndPhaseDrawCommand}"
+                                Visibility="{Binding IsEndPhaseDraw, Converter={StaticResource BoolToVis}}"
+                                HorizontalAlignment="Left" Padding="8,4" Margin="0,0,0,10" />
+
+                        <StackPanel Visibility="{Binding IsEndPhaseCrabAttacks, Converter={StaticResource BoolToVis}}">
+                            <TextBlock Text="All remaining crabs attack" FontWeight="Bold" Margin="0,0,0,4" />
+                            <WrapPanel>
+                                <Button Content="Take the Hit" Command="{Binding CrabAttackTakeHitCommand}" Margin="0,0,6,6" Padding="8,4" />
+                                <ItemsControl ItemsSource="{Binding BlockableCards}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <WrapPanel />
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate DataType="{x:Type models:EquipmentCard}">
+                                            <Button Content="{Binding Name, StringFormat='Block with {0}'}"
+                                                    Command="{Binding DataContext.CrabAttackBlockCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                    CommandParameter="{Binding}"
+                                                    Margin="0,0,6,6" Padding="8,4" />
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </WrapPanel>
+                        </StackPanel>
+
+                    </StackPanel>
+                </ScrollViewer>
+            </Grid>
+        </DockPanel>
+    </Grid>
+</UserControl>

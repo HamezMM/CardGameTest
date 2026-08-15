@@ -1,0 +1,9 @@
+Id,Name,Role,Passive,Active,ActiveUsesEasy,ActiveUsesNormal,ActiveUsesHard
+CHAR-01,Brawler,Melee,"Cleave — melee weapons hit multiple crabs, scaled by remaining HP (formula TBD)",TBD,,,
+CHAR-02,Biologist,Support,"Debuffs the current boss's biome bonus (reduces it, does not cancel it)",TBD,,,
+CHAR-03,Medic,Support,"Heals for +1 HP whenever a heal card is played (by anyone)","Full team heal: every player heals 3 HP flat, capped at max HP",3,2,1
+CHAR-04,Engineer,Utility,"Can recycle/reuse a spent equipment card once per round",TBD,,,
+CHAR-05,Scout,Positioning,"Can swap position (melee <-> range) once per combat cycle for free",TBD,,,
+CHAR-06,Marksman,Ranged,"Ranged weapons deal +1 damage tier",TBD,,,
+CHAR-07,Technician,Utility,"Can peek at the next crab action card before it resolves",TBD,,,
+CHAR-08,Captain,Leadership,"Team-wide: when the Captain is first player, every player draws one extra equipment card that round",TBD,,,

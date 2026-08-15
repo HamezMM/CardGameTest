@@ -1,0 +1,45 @@
+<UserControl x:Class="Gamma931.App.Views.CardBrowserView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d"
+             d:DesignHeight="600" d:DesignWidth="900">
+    <DockPanel Margin="10">
+        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,10">
+            <TextBlock Text="Search:" VerticalAlignment="Center" Margin="0,0,6,0" />
+            <TextBox Width="300" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" />
+        </StackPanel>
+
+        <TabControl>
+            <TabItem Header="Characters">
+                <DataGrid ItemsSource="{Binding Characters}" IsReadOnly="True" AutoGenerateColumns="True" />
+            </TabItem>
+            <TabItem Header="Bosses">
+                <DataGrid ItemsSource="{Binding Bosses}" IsReadOnly="True" AutoGenerateColumns="True" />
+            </TabItem>
+            <TabItem Header="Minions">
+                <DataGrid ItemsSource="{Binding Minions}" IsReadOnly="True" AutoGenerateColumns="True" />
+            </TabItem>
+            <TabItem Header="Crab Actions">
+                <DataGrid ItemsSource="{Binding CrabActions}" IsReadOnly="True" AutoGenerateColumns="True" />
+            </TabItem>
+            <TabItem Header="Damage">
+                <DataGrid ItemsSource="{Binding DamageCards}" IsReadOnly="True" AutoGenerateColumns="True" />
+            </TabItem>
+            <TabItem Header="Equipment">
+                <DataGrid ItemsSource="{Binding Equipment}" IsReadOnly="True" AutoGenerateColumns="True" />
+            </TabItem>
+            <TabItem Header="Locations">
+                <DataGrid ItemsSource="{Binding Locations}" IsReadOnly="True" AutoGenerateColumns="False">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Id" Binding="{Binding Id}" />
+                        <DataGridTextColumn Header="Name" Binding="{Binding Name}" />
+                        <DataGridTextColumn Header="Biome" Binding="{Binding Biome}" />
+                        <DataGridCheckBoxColumn Header="Shuttle" Binding="{Binding IsShuttle}" />
+                    </DataGrid.Columns>
+                </DataGrid>
+            </TabItem>
+        </TabControl>
+    </DockPanel>
+</UserControl>
