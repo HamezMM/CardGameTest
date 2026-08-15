@@ -122,6 +122,13 @@ For each crab attack, draw one card from the damage deck and resolve it.
 Crab attacks can be blocked by playing a protection equipment card as a response, out of
 turn. Healing cards must be played in normal turn order (not as a response).
 
+**Confirmed**: this damage-deck draw is the same for every attacking crab, boss or minion
+— there is no per-crab attack stat. Minion crab **types are flavor/cosmetic only**: they
+carry no passive or active abilities and deal identical 1-2 HP damage (per the shared damage
+deck) regardless of which minion card is in play. All mechanical complexity (resistances,
+healing, splitting, unique attacks) lives on boss cards only, per the "crab complexity lives
+only on bosses" decision above.
+
 ---
 
 ## Damage & Health
