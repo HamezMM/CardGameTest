@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Windows.Data;
 using Gamma931.Core.Data;
 

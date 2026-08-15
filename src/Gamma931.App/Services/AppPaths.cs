@@ -1,3 +1,5 @@
+using System.IO;
+
 namespace Gamma931.App.Services;
 
 public static class AppPaths
