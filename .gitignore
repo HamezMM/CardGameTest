@@ -1,0 +1,13 @@
+## .NET build output
+bin/
+obj/
+out/
+
+## Visual Studio / Rider
+.vs/
+.idea/
+*.user
+*.suo
+
+## Test results
+TestResults/

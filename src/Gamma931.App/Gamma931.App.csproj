@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <ApplicationIcon></ApplicationIcon>
+    <AssemblyName>Gamma931.App</AssemblyName>
+    <RootNamespace>Gamma931.App</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Gamma931.Core\Gamma931.Core.csproj" />
+  </ItemGroup>
+
+  <!-- Card data lives at the repo root /Data so designers can edit CSVs without touching
+       source. Copy it next to the built exe so the app can find it on first run. -->
+  <ItemGroup>
+    <None Include="..\..\Data\**\*.csv">
+      <Link>Data\%(RecursiveDir)%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>

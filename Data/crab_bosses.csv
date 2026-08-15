@@ -1,0 +1,11 @@
+Id,Name,Category,Biome,Concept,AbilityText,StartingHp
+BOSS-01,Alpha Drone,Universal,,"Straightforward baseline fight — no gimmick, good early/tutorial boss",TBD,6
+BOSS-02,Broodmother,Universal,,"Spawns an extra minion each round (breeds)",TBD,6
+BOSS-03,Ironshell,Universal,,"High resistance/armor — needs sustained hits to bring down",TBD,8
+BOSS-04,Sandreaver,BiomeSpecific,Desert,"Burrows — buffs minions' range-position targeting priority",TBD,6
+BOSS-05,Bogfather,BiomeSpecific,Swamp,"Passively heals each round it's in the swamp",TBD,6
+BOSS-06,Frostclaw,BiomeSpecific,Ice/Tundra,"Slows players — reduces equipment draw or freezes a card in hand",TBD,6
+BOSS-07,Vinewarden,BiomeSpecific,Jungle,"Regenerates HP tied to its jungle terrain bonus",TBD,6
+BOSS-08,Magmapincer,BiomeSpecific,Volcanic/Caves,"Deals burn damage over time to whoever last hit it",TBD,6
+BOSS-09,Wreckstalker,BiomeSpecific,Ruins/Wreckage,"Ambush — shifts crab targeting priority in its favor",TBD,6
+BOSS-10,Tideshell,BiomeSpecific,Coastal/Reef,"Splits into a minion copy when it takes heavy damage",TBD,6
