@@ -61,6 +61,10 @@ public sealed class GameViewModel : ObservableObject
         EndPhaseDrawCommand = new RelayCommand(() => Run(() =>
             _engine.EndPhaseDrawAndResolve(State, CombatTarget.Boss, State.PendingEquipmentTurns.Count > 0 ? State.PendingEquipmentTurns.Peek() : null)),
             () => IsEndPhaseDraw && _state!.PendingEquipmentTurns.Count > 0);
+        EndPhaseAttackMeleeBossCommand = new RelayCommand(() => Run(() => _engine.EndPhaseAttackWithDefaultMeleeWeapon(State, CombatTarget.Boss)),
+            () => IsEndPhaseDraw && _state!.PendingEquipmentTurns.Count > 0);
+        EndPhaseAttackMeleeMinionsCommand = new RelayCommand(() => Run(() => _engine.EndPhaseAttackWithDefaultMeleeWeapon(State, CombatTarget.Minions)),
+            () => IsEndPhaseDraw && _state!.PendingEquipmentTurns.Count > 0);
 
         CrabAttackTakeHitCommand = new RelayCommand(() => Run(() => _engine.ResolveNextCrabAttack(State)),
             () => IsEndPhaseCrabAttacks && _state!.PendingCrabAttacks.Count > 0);
@@ -164,6 +168,8 @@ public sealed class GameViewModel : ObservableObject
     public RelayCommand HealSelfCommand { get; }
     public RelayCommand PlayUtilityCommand { get; }
     public RelayCommand EndPhaseDrawCommand { get; }
+    public RelayCommand EndPhaseAttackMeleeBossCommand { get; }
+    public RelayCommand EndPhaseAttackMeleeMinionsCommand { get; }
     public RelayCommand CrabAttackTakeHitCommand { get; }
     public RelayCommand CrabAttackBlockCommand { get; }
 

@@ -90,7 +90,7 @@ public sealed class CsvCardLoader
             Name = row.Name,
             EquipmentType = ParseEnum<EquipmentType>(row.EquipmentType, path, row.Id),
             EffectText = row.EffectText,
-            DamageTier = row.DamageTier,
+            DamageBonus = row.DamageBonus,
         });
 
     private List<LocationCard> LoadLocations(string path) =>

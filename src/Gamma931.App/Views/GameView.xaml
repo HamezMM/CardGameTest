@@ -252,9 +252,14 @@
 
                         <TextBlock Text="End Phase Combat" FontWeight="Bold" Margin="0,10,0,4"
                                    Visibility="{Binding IsEndPhaseDraw, Converter={StaticResource BoolToVis}}" />
-                        <Button Content="Draw &amp; Resolve (End Phase)" Command="{Binding EndPhaseDrawCommand}"
-                                Visibility="{Binding IsEndPhaseDraw, Converter={StaticResource BoolToVis}}"
-                                HorizontalAlignment="Left" Padding="8,4" Margin="0,0,0,10" />
+                        <WrapPanel Visibility="{Binding IsEndPhaseDraw, Converter={StaticResource BoolToVis}}" Margin="0,0,0,10">
+                            <Button Content="Draw &amp; Resolve (End Phase)" Command="{Binding EndPhaseDrawCommand}"
+                                    Padding="8,4" Margin="0,0,6,0" />
+                            <Button Content="Swing Default Melee — Boss" Command="{Binding EndPhaseAttackMeleeBossCommand}"
+                                    Padding="8,4" Margin="0,0,6,0" />
+                            <Button Content="Swing Default Melee — Minions" Command="{Binding EndPhaseAttackMeleeMinionsCommand}"
+                                    Padding="8,4" />
+                        </WrapPanel>
 
                         <StackPanel Visibility="{Binding IsEndPhaseCrabAttacks, Converter={StaticResource BoolToVis}}">
                             <TextBlock Text="All remaining crabs attack" FontWeight="Bold" Margin="0,0,0,4" />

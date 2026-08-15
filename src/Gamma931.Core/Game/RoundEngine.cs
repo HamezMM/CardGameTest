@@ -21,6 +21,11 @@ public sealed class RoundEngine
     private const int BaseHealAmount = 2; // TODO placeholder: not numerically specified in RULES.md
     private const string MedicCharacterName = "Medic";
 
+    // RULES.md "Weapons & Modifiers": every player always has a default melee weapon and a
+    // default ranged weapon, each dealing this much on its own. Playing a Melee/Ranged equipment
+    // card is playing a weapon modifier (melee) or ammo (ranged) that adds its DamageBonus on top.
+    private const int BaseWeaponDamage = 1;
+
     // Boss ability magnitudes below come from tools/boss_ability_simulation.py's Monte Carlo
     // tuning pass (see BALANCE_NOTES.md "Boss Ability Balance Pass") — chosen so drawing any one
     // boss is roughly as threatening as any other, not picked by feel. Biome-specific bosses only
@@ -546,22 +551,55 @@ public sealed class RoundEngine
 
     private void ResolveWeaponHit(GameState state, Player player, EquipmentCard card, CombatTarget target)
     {
-        // TODO placeholder: RULES.md never pins a numeric damage value per weapon hit. Each hit
-        // deals DamageTier HP to the boss (minimum 1) and always outright kills a minion per hit
-        // (RULES.md: minions are a flat 1 HP — "any hit kills one"). Tune DamageTier in equipment.csv.
-        var hits = Math.Max(1, card.DamageTier);
+        // RULES.md "Weapons & Modifiers": the default weapon always deals BaseWeaponDamage; a
+        // played Melee/Ranged card is a modifier/ammo that adds its DamageBonus on top.
+        var hits = BaseWeaponDamage + Math.Max(0, card.DamageBonus);
+        ApplyWeaponHit(state, player, hits, card.Name, target);
+    }
 
+    /// <summary>
+    /// RULES.md "Weapons & Modifiers" / End Phase Combat: lets a player swing their default
+    /// melee weapon for its flat <see cref="BaseWeaponDamage"/> with no card played or drawn —
+    /// the guaranteed fallback action End Phase Combat now offers instead of only drawing a
+    /// random top-of-deck equipment card.
+    /// </summary>
+    public void EndPhaseAttackWithDefaultMeleeWeapon(GameState state, CombatTarget target = CombatTarget.Boss)
+    {
+        RequirePhase(state, GamePhase.EndPhaseCombat);
+        if (state.PendingEquipmentTurns.Count == 0)
+        {
+            throw new InvalidOperationException("No players left to act this End Phase pass.");
+        }
+
+        var player = state.PendingEquipmentTurns.Dequeue();
+        player.Position = Position.Melee;
+        state.LogEvent($"{player.Name} swings their default melee weapon (no card drawn).");
+        ApplyWeaponHit(state, player, BaseWeaponDamage, "their default melee weapon", target);
+
+        if (CheckRoundEnd(state))
+        {
+            return;
+        }
+
+        if (state.PendingEquipmentTurns.Count == 0)
+        {
+            BeginCrabAttackWave(state);
+        }
+    }
+
+    private void ApplyWeaponHit(GameState state, Player player, int hits, string weaponName, CombatTarget target)
+    {
         if (target == CombatTarget.Boss)
         {
             if (state.CurrentBoss is not { } boss || state.CurrentBossHp <= 0)
             {
-                state.LogEvent($"{player.Name} plays {card.Name}, but the boss is already down.");
+                state.LogEvent($"{player.Name} attacks with {weaponName}, but the boss is already down.");
                 return;
             }
 
             state.CurrentBossHp = Math.Max(0, state.CurrentBossHp - hits);
             state.LogEvent(
-                $"{player.Name} hits {boss.Name} with {card.Name} for {hits} " +
+                $"{player.Name} hits {boss.Name} with {weaponName} for {hits} " +
                 $"(boss HP: {state.CurrentBossHp}/{boss.StartingHp}).");
 
             // Magmapincer: 30% chance/round, decided on the first hit that lands, to burn
@@ -601,8 +639,8 @@ public sealed class RoundEngine
             }
 
             state.LogEvent(kills > 0
-                ? $"{player.Name} kills {kills} minion(s) with {card.Name}."
-                : $"{player.Name} plays {card.Name}, but no minions remain to hit.");
+                ? $"{player.Name} kills {kills} minion(s) with {weaponName}."
+                : $"{player.Name} attacks with {weaponName}, but no minions remain to hit.");
         }
     }
 

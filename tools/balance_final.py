@@ -37,8 +37,8 @@ print("4p (low=7, high=8):")
 b4 = best_split(4, 7, 8)
 print(f"  BEST: H={b4[1]} -> {b4[2]*100:.1f}%\n")
 
-print("5p (low=8, high=9):")
-b5 = best_split(5, 8, 9)
+print("5p (low=7, high=8):")
+b5 = best_split(5, 7, 8)
 print(f"  BEST: H={b5[1]} -> {b5[2]*100:.1f}%\n")
 
 print("2p (flat 1, rules-mandated floor):")

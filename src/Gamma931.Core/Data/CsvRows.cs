@@ -52,7 +52,7 @@ public sealed class EquipmentCsvRow
     public string Name { get; set; } = string.Empty;
     public string EquipmentType { get; set; } = string.Empty;
     public string EffectText { get; set; } = string.Empty;
-    public int DamageTier { get; set; }
+    public int DamageBonus { get; set; }
 }
 
 public sealed class LocationCsvRow

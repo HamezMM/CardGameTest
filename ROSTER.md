@@ -14,7 +14,7 @@ for the underlying mechanics these abilities plug into.
 | **Medic** | Support | Heals for **+1 HP** whenever a heal card is played (by anyone) | **Full team heal**: every player heals 3 HP flat (half of 6 max), capped at max HP |
 | **Engineer** | Utility | Can recycle/reuse a spent equipment card once per round | TBD |
 | **Scout** | Positioning | Can swap position (melee↔range) once per combat cycle for free | TBD |
-| **Marksman** | Ranged | Ranged weapons deal +1 damage tier | TBD |
+| **Marksman** | Ranged | Ranged attacks deal +1 bonus damage (on top of ammo's own bonus) | TBD |
 | **Technician** | Utility | Can peek at the next crab action card before it resolves | TBD |
 | **Captain** | Leadership | **Team-wide**: when the Captain is first player, *every* player draws one extra equipment card that round (not just the Captain) | TBD |
 

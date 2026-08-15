@@ -27,8 +27,8 @@ philosophy applied to bosses too.
 
 import random
 from balance_simulation import (
-    PLAYER_HP, EQUIP_DRAW, EQUIPMENT_DECK, draw_damage, pick_target, HEAL_AMOUNT,
-    END_PHASE_MAX_ITERS,
+    PLAYER_HP, EQUIP_DRAW, EQUIPMENT_DECK, BASE_WEAPON_DAMAGE, draw_damage, pick_target,
+    HEAL_AMOUNT, END_PHASE_MAX_ITERS,
 )
 
 REF_MINIONS = {2: 1, 3: 4, 4: 7, 5: 8}
@@ -92,7 +92,7 @@ def simulate_round(rng, n_players, hp, positions, minion_count, boss, first_play
 
     def resolve_card(card, actor):
         nonlocal boss_hp, minions, tideshell_used, magma_burn_used
-        ctype, tier = card
+        ctype, bonus = card
         if ctype == "Melee":
             positions[actor] = "melee"
         elif ctype == "Ranged":
@@ -102,12 +102,13 @@ def simulate_round(rng, n_players, hp, positions, minion_count, boss, first_play
             if minions > 0:
                 minions -= 1
             else:
-                dealt = min(tier, boss_hp)
-                boss_hp = max(0, boss_hp - tier)
+                hits = BASE_WEAPON_DAMAGE + bonus
+                dealt = min(hits, boss_hp)
+                boss_hp = max(0, boss_hp - hits)
                 if dealt > 0 and ability == "burn_once_per_round" and not magma_burn_used:
                     hp[actor] = max(0, hp[actor] - param)
                     magma_burn_used = True
-                if dealt > 0 and ability == "split_on_heavy_hit" and not tideshell_used and tier >= param[0]:
+                if dealt > 0 and ability == "split_on_heavy_hit" and not tideshell_used and hits >= param[0]:
                     minions += param[1]
                     tideshell_used = True
         elif ctype == "Healing":
@@ -280,7 +281,7 @@ def simulate_round_prob_variants(rng, n_players, hp, positions, minion_count, bo
 
     def resolve_card(card, actor):
         nonlocal boss_hp, minions, tideshell_used, magma_burn_used
-        ctype, tier = card
+        ctype, bonus = card
         if ctype == "Melee":
             positions[actor] = "melee"
         elif ctype == "Ranged":
@@ -290,12 +291,13 @@ def simulate_round_prob_variants(rng, n_players, hp, positions, minion_count, bo
             if minions > 0:
                 minions -= 1
             else:
-                dealt = min(tier, boss_hp)
-                boss_hp = max(0, boss_hp - tier)
+                hits = BASE_WEAPON_DAMAGE + bonus
+                dealt = min(hits, boss_hp)
+                boss_hp = max(0, boss_hp - hits)
                 if dealt > 0 and ability == "burn_once_per_round_prob" and magma_burn_roll and not magma_burn_used:
                     hp[actor] = max(0, hp[actor] - 1)
                     magma_burn_used = True
-                if dealt > 0 and ability == "split_prob" and tideshell_roll and not tideshell_used and tier >= param[0]:
+                if dealt > 0 and ability == "split_prob" and tideshell_roll and not tideshell_used and hits >= param[0]:
                     minions += param[1]
                     tideshell_used = True
         elif ctype == "Healing":

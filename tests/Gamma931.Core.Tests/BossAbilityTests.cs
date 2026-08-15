@@ -329,7 +329,7 @@ public class BossAbilityTests
         var reef = LocationFor(db, "Coastal/Reef");
         var random = new AlwaysSucceedRandom();
         var engine = new RoundEngine(random);
-        var tierTwoWeapons = RepeatToFillDeck(db.Equipment.Where(e => e.DamageTier >= 2));
+        var tierTwoWeapons = RepeatToFillDeck(db.Equipment.Where(e => e.DamageBonus >= 2));
         var state = BuildState(db, 3, boss, reef, random, equipmentDeckCards: tierTwoWeapons);
 
         DriveToCombatCycle(engine, state);

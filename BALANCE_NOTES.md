@@ -61,7 +61,7 @@ this simulation should be re-run rather than trusted as-is.
    vs. a "low" one, to land closer to 70% than a single flat integer can.
 3. Each configuration was run at 20,000–30,000 trials per data point.
 
-## Results
+## Results (original pass, superseded — see "Weapon Rework Re-Tune" below)
 
 | Players | Result | Configuration |
 |---|---|---|
@@ -75,6 +75,10 @@ been updated with these values (high-value locations assigned to `LOC-01`
 through `LOC-0N` for each column, arbitrarily but consistently — swap which
 specific locations carry the high value freely, only the count matters for
 the target win rate).
+
+**These numbers are stale.** They were produced against the pre-"Weapons &
+Modifiers" flat-tier weapon model. See "Weapon Rework Re-Tune" below for the
+current `locations.csv` values and the re-run boss ability pass.
 
 ### 2p is a real finding, not a rounding error
 
@@ -106,6 +110,69 @@ Crawler, Tide Snapper) to cover the max simultaneous draw.
 `Data/physical_card_assignments.csv` was regenerated accordingly: 83 of the
 104 physical cards (two standard decks) are now assigned (was 79), leaving
 21 reserved for future content (was 25).
+
+**Update, weapon rework**: the single-use Flare Gun (`EQ-06`) was removed from
+`equipment.csv` (RULES.md "Weapons & Modifiers" — it was a Ranged weapon whose only
+differentiator, "distracts crabs," was unimplemented flavor text with no mechanical
+effect). Its physical card slot (`8C-A`) reverts to `Unused (Reserved)`: 82 of 104
+assigned, 22 reserved.
+
+---
+
+## Weapon Rework Re-Tune
+
+RULES.md's weapon model changed from single-use weapon cards (their own flat damage
+tier) to a default weapon (flat `BaseWeaponDamage` = 1) boosted by a played
+modifier/ammo card's `DamageBonus` — a net damage buff, since every former tier-1
+weapon hit (1 dmg) now needs a modifier card to attack at all but every card that does
+attack deals at least 2 (1 base + >= 1 bonus). `tools/balance_simulation.py` and
+`tools/boss_ability_simulation.py` were updated to model this (`BASE_WEAPON_DAMAGE`,
+`EQUIPMENT_DECK` bonus values, `EQ-06` Flare Gun removed) and both re-run in full.
+
+### Minion count re-tune
+
+The Alpha Drone control baseline (no ability, at the previous reference minion counts)
+confirms the buff: 2p jumped from ~20% to **~40%**, 3p/4p/5p all rose several points
+too. Re-running the same coarse-sweep-then-location-split method as the original pass
+against these higher baselines:
+
+| Players | Result | Configuration |
+|---|---|---|
+| 2p | **39.8%** (target still unreachable via minion count) | flat 1 minion/location (rules-mandated floor, unchanged) |
+| 3p | **68.0%** | 2 of 7 locations at 5 minions, other 5 at 4 |
+| 4p | **70.7%** | flat 7 minions at all 7 locations (no split needed) |
+| 5p | **71.5%** | 5 of 7 locations at 8 minions, other 2 at 7 |
+
+3p/4p/5p land within ~2pp of the 70% target (slightly looser than the original ~1pp,
+an artifact of only 8 possible split ratios across 7 locations combined with the
+steeper win-rate cliff the damage buff creates between adjacent minion counts — see
+the coarse sweeps in `tools/balance_simulation.py`'s own output). `Data/locations.csv`
+has been updated with these values. Note the 5p split **flipped which value is the
+majority** (8 is now the common case, 7 the exception) compared to the original pass,
+where 8 was the low/exception value — worth remembering if a future pass tunes new
+locations, since "majority = easy" is no longer a safe assumption to carry over.
+
+**2p is still unfixed**, and worse relative to the target than before in absolute
+terms (39.8% vs. a 70% target is still a ~30pp gap, versus the original pass's ~50pp
+gap) but the underlying diagnosis in `tools/balance_diagnostics.py` (more equipment
+draws make 2p *worse*, not better; boss HP is the dominant lever) hasn't been
+re-verified against the new damage model. Same recommendation as before: 2p needs a
+fix outside minion count — most likely per-player-count boss HP scaling or making
+character passives/actives mandatory rather than optional at 2p.
+
+### Boss ability magnitudes: unchanged
+
+Re-running `tools/boss_ability_simulation.py`'s full sweep (same reference minion
+counts by coincidence — the re-tuned "majority" value per player count above happens
+to match `REF_MINIONS` exactly: 2p=1, 3p=4, 4p=7, 5p=8) picked the **same best
+parameter for all 8 tunable bosses** as the original pass: Broodmother 0.15,
+Bogfather 1 HP, Frostclaw 0.40, Vinewarden (1 HP/tick, cap 2), Magmapincer 0.30,
+Sandreaver 0.30, Wreckstalker 0.25, Tideshell (tier 2, +1 minion, 0.40). No changes
+needed in `RoundEngine.cs` or `crab_bosses.csv` — the existing "Results (isolated,
+boss drawn every round)" table above is still current. This makes sense: each
+ability's candidate values were already spaced widely enough (e.g. Broodmother's
+0.15/0.25/0.35/0.5) that the damage buff shifting the underlying baseline didn't
+change which candidate sits closest to it.
 
 ---
 

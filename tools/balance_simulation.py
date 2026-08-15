@@ -31,16 +31,19 @@ EQUIP_DRAW = {2: 4, 3: 3, 4: 3, 5: 2}
 # shared boss deck).
 BOSS_HP_POOL = [6, 6, 6, 6, 6, 6, 6, 6, 6, 8]
 
-# equipment.csv: 14-card deck composition (type, damage tier)
+# equipment.csv: 13-card deck composition (type, DamageBonus). Melee/Ranged cards are weapon
+# modifiers/ammo, not stand-alone weapons: RESOLVE below adds this bonus on top of the default
+# weapon's flat BASE_WEAPON_DAMAGE (see resolve_card) per RULES.md "Weapons & Modifiers".
 EQUIPMENT_DECK = (
-    [("Melee", 1)] * 2 +      # Rusty Cleaver, Salvaged Spear
-    [("Melee", 2)] * 1 +      # Boarding Axe
-    [("Ranged", 1)] * 2 +     # Scrap Pistol, Flare Gun
-    [("Ranged", 2)] * 1 +     # Hunting Rifle
+    [("Melee", 1)] * 2 +      # Sharpened Blade, Honed Point
+    [("Melee", 2)] * 1 +      # Reinforced Edge
+    [("Ranged", 1)] * 1 +     # Standard Rounds
+    [("Ranged", 2)] * 1 +     # Armor-Piercing Rounds
     [("Protection", 0)] * 2 + # Makeshift Shield, Riot Plating
     [("Healing", 0)] * 2 +    # Field Bandage, Medkit
     [("Utility", 0)] * 4      # Grapple Hook, Signal Flare, Emergency Rations, Stim Injector
 )
+BASE_WEAPON_DAMAGE = 1  # RULES.md: every player's default weapon deals this on its own
 
 # damage.csv: 28-card deck, Arms/Legs/Torso = 1 dmg (24 cards), Head = 2 dmg (4 cards)
 DAMAGE_DECK = [1] * 24 + [2] * 4
@@ -106,19 +109,19 @@ def crab_attack(rng, hp, positions, protection, boss_alive, minions):
 
 
 def resolve_card(rng, card, actor, hp, positions, protection, boss_hp, minions):
-    ctype, tier = card
+    ctype, bonus = card
     if ctype == "Melee":
         positions[actor] = "melee"
         if minions > 0:
             minions -= 1
         else:
-            boss_hp = max(0, boss_hp - tier)
+            boss_hp = max(0, boss_hp - (BASE_WEAPON_DAMAGE + bonus))
     elif ctype == "Ranged":
         positions[actor] = "range"
         if minions > 0:
             minions -= 1
         else:
-            boss_hp = max(0, boss_hp - tier)
+            boss_hp = max(0, boss_hp - (BASE_WEAPON_DAMAGE + bonus))
     elif ctype == "Healing":
         alive = [i for i in range(len(hp)) if hp[i] > 0]
         if alive:

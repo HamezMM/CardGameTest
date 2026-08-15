@@ -9,14 +9,27 @@ Status: DRAFT — contains open design questions, marked `[OPEN]`. Not final.
 - Melee/range **position is determined by equipment played** (playing a melee weapon puts you
   in melee position, a ranged weapon puts you in range position) — dynamic, not fixed per
   character or chosen as a formation.
+- **Weapons are not drawn**. Every player always has a default melee weapon and a default
+  ranged weapon, each dealing a flat 1 HP hit on their own. Instead of single-use weapon cards,
+  the equipment deck's Melee/Ranged cards are **weapon modifiers** (melee) or **ammo** (ranged):
+  playing one attacks with the matching default weapon for 1 HP **plus** that card's bonus, then
+  the card is discarded (single-use boost, not a permanent attachment). See "Weapons &
+  Modifiers" below.
+- **A player's turn plays one equipment card first; only a weapon modifier/ammo card also lets
+  them attack.** Playing a Healing, Protection, or Utility card is the player's whole turn — no
+  attack that cycle. There is no way to attack without playing a matching modifier/ammo card
+  from hand (same as the old "no weapon card in hand → no attack" constraint).
 - Crab **complexity lives only on bosses**. Minions stay flat, simple HP creatures with no
   special traits (no resistances/healing/splitting on minions).
 - Position **persists** once set (playing a melee weapon keeps you in melee position until
   you play a ranged weapon, and vice versa) — it does not reset each round or each cycle.
 - Players **default to range position** at the start of a round, before playing any equipment.
 - Minion crabs are a **flat 1 HP** — any hit kills one. All real threat comes from bosses.
-- Deck exhaustion (equipment, damage, or crab deck): **reshuffle the discard pile** into a new
-  deck and continue play uninterrupted.
+- Deck exhaustion (equipment, damage, minion, or any other deck): **reshuffle the discard pile**
+  into a new deck and continue play uninterrupted. In particular, once the equipment pile or the
+  minion pile is drawn empty, its own discard pile (played equipment cards; killed minion cards)
+  is reshuffled into a new draw pile for that deck — each deck's discard only ever feeds back
+  into itself, decks are never merged.
 - **Cleave is not a general melee rule** — normal melee equipment hits one crab. Cleave is a
   Brawler-archetype character passive: any melee weapon that character plays triggers cleave,
   hitting a number of crabs based on their *remaining* HP (exact scaling formula TBD).
@@ -83,6 +96,13 @@ Repeats each cycle until the round ends:
 4. **Confirmed**: this whole 4-step cycle repeats (draw new crab action, all players play
    equipment again) until the round-end condition is hit — not just a single pass.
 
+**`[NEW]` Playing a card is always the turn action; only a weapon modifier/ammo card also
+attacks.** A player plays exactly one equipment card on their turn, same as before. If it's a
+weapon modifier (Melee) or ammo (Ranged), playing it also attacks with the matching default
+weapon (see "Weapons & Modifiers" above) — that's the whole point of playing it. If it's a
+Healing, Protection, or Utility card, that card's own effect is the whole turn; no attack
+happens that cycle.
+
 A round ends when either all crabs (boss + minions) or all players are dead.
 If crabs remain after all equipment cards are exhausted for the round, move to **End Phase Combat**.
 Once the round ends, remove the revealed location card and reveal the next one.
@@ -96,11 +116,38 @@ still to be tuned via playtesting.
 
 ---
 
+## Weapons & Modifiers `[NEW]`
+
+There is no separate "weapon deck" and weapons are never drawn or run out on their own:
+
+- Every player always has a **default melee weapon** and a **default ranged weapon**, each
+  dealing a flat **1 HP** hit by itself.
+- The equipment deck's Melee cards are **weapon modifiers**; its Ranged cards are **ammo**.
+  Playing one attacks with the matching default weapon for 1 HP plus that card's bonus (e.g. a
+  +1 modifier makes a melee attack deal 2 HP total), then the card is discarded — a single-use
+  boost, not a permanent attachment to the weapon.
+- Playing a modifier/ammo card is what lets a player attack that combat cycle (see Combat Turn
+  Order below) — it also sets their position (melee/range), same as the old single-use weapon
+  cards did.
+- A minion still dies to any hit regardless of its size, so a boosted attack can kill more than
+  one minion in the same hit (up to the total HP dealt), matching how weapon tiers worked before.
+
+---
+
 ## End Phase Combat
 
+Reached once all players have played all their equipment for the round (their hands are
+empty) but crabs remain.
+
 1. Players and crabs fight in sudden death — no new crabs enter play.
-2. Starting with the first player, draw and reveal the top card of the equipment deck and
-   resolve its effects immediately. Continue until all players have drawn once.
+2. Starting with the first player, each player either:
+   - draws and reveals the top card of the equipment deck and resolves its effects immediately
+     (same as before — a Melee/Ranged draw attacks with the bonus per "Weapons & Modifiers", a
+     Healing/Protection/Utility draw does not), **or**
+   - `[NEW]` skips the draw and attacks with their **default melee weapon** for its flat 1 HP,
+     guaranteeing at least some offense in sudden death instead of relying on a random draw.
+
+   Continue until all players have acted once.
 3. All remaining crabs attack.
 4. Repeat until the round is over (all crabs or all players dead).
 

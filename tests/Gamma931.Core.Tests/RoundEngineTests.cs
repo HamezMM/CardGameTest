@@ -127,6 +127,90 @@ public class RoundEngineTests
         Assert.Equal(startingMinionCount, state.CurrentMinions.Count); // targeted the boss, not minions
     }
 
+    [Fact]
+    public void EndPhaseAttackWithDefaultMeleeWeapon_DealsBaseDamage_WithoutDrawingACard()
+    {
+        var db = LoadDb();
+        var engine = new RoundEngine(new Random(3));
+        var state = engine.StartNewGame(db, PlayerSetup(db, 2), DifficultyLevel.Normal);
+
+        DriveToCombatCycle(engine, state);
+        engine.BeginEndPhaseCombat(state);
+
+        var startingBossHp = state.CurrentBossHp;
+        var drawPileBefore = state.EquipmentDeck.DrawPileCount;
+        var discardPileBefore = state.EquipmentDeck.DiscardPileCount;
+        var player = state.PendingEquipmentTurns.Peek();
+
+        engine.EndPhaseAttackWithDefaultMeleeWeapon(state, CombatTarget.Boss);
+
+        Assert.Equal(Position.Melee, player.Position);
+        Assert.Equal(Math.Max(0, startingBossHp - 1), state.CurrentBossHp);
+        Assert.Equal(drawPileBefore, state.EquipmentDeck.DrawPileCount);
+        Assert.Equal(discardPileBefore, state.EquipmentDeck.DiscardPileCount);
+    }
+
+    [Fact]
+    public void MinionDeck_ReshufflesDiscard_OnceAllMinionsHaveBeenKilledAndRedrawn()
+    {
+        var db = LoadDb();
+        var engine = new RoundEngine(new Random(5));
+        // 2p locations always call for exactly 1 minion (locations.csv MinionCount2p), so a
+        // 1-card minion deck is fully drained by a single DrawMinions call.
+        var smallMinionDeck = new Deck<CrabMinionCard>(db.Minions.Take(1), new Random(5));
+        var state = new GameState
+        {
+            Players = new List<Player>
+            {
+                new() { Name = "Player 1", Character = db.Characters[0] },
+                new() { Name = "Player 2", Character = db.Characters[1] },
+            },
+            Difficulty = DifficultyLevel.Normal,
+            EquipmentDeck = new Deck<EquipmentCard>(db.Equipment, new Random(5)),
+            DamageDeck = new Deck<DamageCard>(db.DamageCards, new Random(5)),
+            BossDeck = new Deck<CrabBossCard>(db.Bosses, new Random(5)),
+            CrabActionDeck = new Deck<CrabActionCard>(db.CrabActions, new Random(5)),
+            CrabMinionDeck = smallMinionDeck,
+            RemainingLocations = db.NonShuttleLocations.Take(1).ToList(),
+            FirstPlayerIndex = 0,
+            RoundNumber = 0,
+            Phase = GamePhase.LocationReveal,
+        };
+
+        engine.RevealNextLocation(state);
+        engine.DrawEquipmentForAllPlayers(state);
+        engine.DrawBoss(state);
+        engine.SetAsideCrabActions(state);
+        engine.DrawMinions(state); // drains the 1-card minion draw pile
+
+        Assert.Equal(0, state.CrabMinionDeck.DrawPileCount);
+
+        // Skip the crab-action attack entirely so only the weapon hit below affects state — this
+        // test is about the minion deck's reshuffle, not crab attack resolution.
+        state.CrabActionsThisRound.Clear();
+        engine.DrawCrabAction(state);
+        Assert.Null(state.PendingCrabActionTarget);
+
+        // Guarantee whoever is up next has a melee modifier in hand, regardless of the random
+        // equipment draw — every weapon card's DamageBonus is >= 1, so one hit (1 base + >= 1
+        // bonus = >= 2) is enough to one-shot both flat-1-HP minions.
+        var meleeModifier = db.Equipment.First(e => e.EquipmentType == EquipmentType.Melee);
+        foreach (var p in state.Players)
+        {
+            p.Hand.Add(meleeModifier);
+        }
+
+        engine.PlayEquipmentFromHand(state, meleeModifier, CombatTarget.Minions);
+
+        Assert.Empty(state.CurrentMinions);
+        Assert.Equal(1, state.CrabMinionDeck.DiscardPileCount); // the killed minion was discarded
+
+        var redrawn = state.CrabMinionDeck.Draw(1); // RULES.md: minion pile reshuffles its own discard
+
+        Assert.Single(redrawn);
+        Assert.Equal(0, state.CrabMinionDeck.DiscardPileCount);
+    }
+
     private static void DriveToCombatCycle(RoundEngine engine, GameState state)
     {
         engine.RevealNextLocation(state);

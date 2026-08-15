@@ -40,12 +40,12 @@ QD-A,A,Diamonds,Q,Location,LOC-05,Ashen Caldera
 KD-A,A,Diamonds,K,Location,LOC-06,Derelict Hull
 AC-A,A,Clubs,A,Location,LOC-07,Shallow Reef
 2C-A,A,Clubs,2,Location,LOC-08,Shuttle
-3C-A,A,Clubs,3,Equipment,EQ-01,Rusty Cleaver
-4C-A,A,Clubs,4,Equipment,EQ-02,Boarding Axe
-5C-A,A,Clubs,5,Equipment,EQ-03,Salvaged Spear
-6C-A,A,Clubs,6,Equipment,EQ-04,Scrap Pistol
-7C-A,A,Clubs,7,Equipment,EQ-05,Hunting Rifle
-8C-A,A,Clubs,8,Equipment,EQ-06,Flare Gun
+3C-A,A,Clubs,3,Equipment,EQ-01,Sharpened Blade
+4C-A,A,Clubs,4,Equipment,EQ-02,Reinforced Edge
+5C-A,A,Clubs,5,Equipment,EQ-03,Honed Point
+6C-A,A,Clubs,6,Equipment,EQ-04,Standard Rounds
+7C-A,A,Clubs,7,Equipment,EQ-05,Armor-Piercing Rounds
+8C-A,A,Clubs,8,Unused (Reserved),,
 9C-A,A,Clubs,9,Equipment,EQ-07,Makeshift Shield
 10C-A,A,Clubs,10,Equipment,EQ-08,Riot Plating
 JC-A,A,Clubs,J,Equipment,EQ-09,Field Bandage
