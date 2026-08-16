@@ -254,20 +254,6 @@
                                                             </Style>
                                                         </Button.Style>
                                                     </Button>
-                                                    <Button Content="Play"
-                                                            Command="{Binding DataContext.PlayUtilityCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                            CommandParameter="{Binding}" Margin="0,0,6,6" Padding="8,4">
-                                                        <Button.Style>
-                                                            <Style TargetType="Button">
-                                                                <Setter Property="Visibility" Value="Collapsed" />
-                                                                <Style.Triggers>
-                                                                    <DataTrigger Binding="{Binding EquipmentType}" Value="Utility">
-                                                                        <Setter Property="Visibility" Value="Visible" />
-                                                                    </DataTrigger>
-                                                                </Style.Triggers>
-                                                            </Style>
-                                                        </Button.Style>
-                                                    </Button>
                                                     <TextBlock VerticalAlignment="Center" FontStyle="Italic" Foreground="Gray" TextWrapping="Wrap" TextAlignment="Center">
                                                         <TextBlock.Style>
                                                             <Style TargetType="TextBlock">

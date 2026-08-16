@@ -118,7 +118,6 @@ def simulate_round(rng, n_players, hp, positions, minion_count, boss, first_play
                 hp[t] = min(PLAYER_HP, hp[t] + HEAL_AMOUNT)
         elif ctype == "Protection":
             protection[actor] += 1
-        # Utility: no-op
 
     def end_of_cycle_regen():
         nonlocal boss_hp, vine_regen_ticks

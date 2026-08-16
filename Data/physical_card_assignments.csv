@@ -50,10 +50,10 @@ AC-A,A,Clubs,A,Location,LOC-07,Shallow Reef
 10C-A,A,Clubs,10,Equipment,EQ-08,Riot Plating
 JC-A,A,Clubs,J,Equipment,EQ-09,Field Bandage
 QC-A,A,Clubs,Q,Equipment,EQ-10,Medkit
-KC-A,A,Clubs,K,Equipment,EQ-11,Grapple Hook
-AS-B,B,Spades,A,Equipment,EQ-12,Signal Flare
-2S-B,B,Spades,2,Equipment,EQ-13,Emergency Rations
-3S-B,B,Spades,3,Equipment,EQ-14,Stim Injector
+KC-A,A,Clubs,K,Equipment,EQ-11,Twin-Edge Cleaver
+AS-B,B,Spades,A,Equipment,EQ-12,Vibro Blade
+2S-B,B,Spades,2,Equipment,EQ-13,Incendiary Rounds
+3S-B,B,Spades,3,Equipment,EQ-14,Scatter Shot
 4S-B,B,Spades,4,Damage,DMG-01,Damage - Arms
 5S-B,B,Spades,5,Damage,DMG-02,Damage - Arms
 6S-B,B,Spades,6,Damage,DMG-03,Damage - Arms

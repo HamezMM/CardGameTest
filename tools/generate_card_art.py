@@ -476,7 +476,6 @@ EQ_PALETTE = {
     "Ranged": ((0.12, 0.20, 0.55), icon_gun),
     "Protection": ((0.58, 0.20, 0.55), icon_shield),
     "Healing": ((0.38, 0.20, 0.55), icon_medkit),
-    "Utility": ((0.75, 0.20, 0.55), icon_wrench_gear),
 }
 
 

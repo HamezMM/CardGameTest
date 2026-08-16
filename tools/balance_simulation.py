@@ -34,14 +34,16 @@ BOSS_HP_POOL = [6, 6, 6, 6, 6, 6, 6, 6, 6, 8]
 # equipment.csv: 13-card deck composition (type, DamageBonus). Melee/Ranged cards are weapon
 # modifiers/ammo, not stand-alone weapons: RESOLVE below adds this bonus on top of the default
 # weapon's flat BASE_WEAPON_DAMAGE (see resolve_card) per RULES.md "Weapons & Modifiers".
+# [UPDATED] The 4 former Utility placeholder cards (Grapple Hook, Signal Flare, Emergency
+# Rations, Stim Injector -- no modeled effect) were replaced with 2 more Melee weapon upgrades
+# and 2 more Ranged ammo cards, so every equipment draw now has combat value.
 EQUIPMENT_DECK = (
-    [("Melee", 1)] * 2 +      # Sharpened Blade, Honed Point
-    [("Melee", 2)] * 1 +      # Reinforced Edge
-    [("Ranged", 1)] * 1 +     # Standard Rounds
-    [("Ranged", 2)] * 1 +     # Armor-Piercing Rounds
+    [("Melee", 1)] * 3 +      # Sharpened Blade, Honed Point, Vibro Blade
+    [("Melee", 2)] * 2 +      # Reinforced Edge, Twin-Edge Cleaver
+    [("Ranged", 1)] * 2 +     # Standard Rounds, Scatter Shot
+    [("Ranged", 2)] * 2 +     # Armor-Piercing Rounds, Incendiary Rounds
     [("Protection", 0)] * 2 + # Makeshift Shield, Riot Plating
-    [("Healing", 0)] * 2 +    # Field Bandage, Medkit
-    [("Utility", 0)] * 4      # Grapple Hook, Signal Flare, Emergency Rations, Stim Injector
+    [("Healing", 0)] * 2      # Field Bandage, Medkit
 )
 BASE_WEAPON_DAMAGE = 1  # RULES.md: every player's default weapon deals this on its own
 
@@ -69,9 +71,9 @@ END_PHASE_MAX_ITERS = 25  # safety cap against runaway loops
 #    player (rational play), consumed on use, exactly per "hold and play as a response".
 # 5. Healing cards heal the most-injured living player by 2 HP (flat baseline amount;
 #    Medic's stated bonus is a character passive, excluded per assumption 1).
-# 6. Utility cards have no modeled combat effect (their effect text is TBD in
-#    equipment.csv) -- treated as a pass, i.e. a conservative (harder) assumption.
-# 7. Equipment hands are sampled i.i.d. from the 14-card deck's proportions rather than
+# 6. [REMOVED] Utility cards no longer exist in equipment.csv (see EQUIPMENT_DECK above) --
+#    every card in the deck now has a modeled effect, so this assumption is moot.
+# 7. Equipment hands are sampled i.i.d. from the 13-card deck's proportions rather than
 #    tracked as an exact without-replacement shoe across the whole game -- reasonable
 #    given RULES.md's own reshuffle-on-exhaustion rule already pushes long-run draws
 #    toward the deck's base distribution.
@@ -129,7 +131,6 @@ def resolve_card(rng, card, actor, hp, positions, protection, boss_hp, minions):
             hp[target] = min(PLAYER_HP, hp[target] + HEAL_AMOUNT)
     elif ctype == "Protection":
         protection[actor] += 1
-    # Utility: no-op (assumption 6)
     return boss_hp, minions
 
 

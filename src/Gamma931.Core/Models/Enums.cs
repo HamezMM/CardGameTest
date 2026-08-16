@@ -22,7 +22,6 @@ public enum EquipmentType
     Ranged,
     Protection,
     Healing,
-    Utility,
 }
 
 public enum BossCategory

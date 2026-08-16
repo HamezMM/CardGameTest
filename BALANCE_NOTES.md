@@ -20,8 +20,9 @@ the numeric rules RULES.md has already confirmed.
 - 6 HP per player; damage-deck distribution (24/28 cards deal 1 dmg, 4/28 deal 2)
 - Minion crabs: flat 1 HP, any hit kills
 - Boss HP: 6 for 9 of 10 bosses, 8 for Ironshell — drawn from a single shared deck
-- Equipment deck composition and damage tiers (14 cards: 6 offensive, 2
-  protection, 2 healing, 4 utility)
+- Equipment deck composition and damage tiers (13 cards: 9 offensive [melee/ranged
+  weapon modifiers and ammo], 2 protection, 2 healing — see "Utility Card Replacement
+  Re-Tune" below; this superseded the original 14-card, 6-offensive/4-utility mix)
 - `EquipmentDrawXp` and `CrabActionCountXp` per player count (unchanged)
 - 5 of the 7 non-shuttle locations are drawn per game (RULES.md setup step 2)
 - Minimum of 1 minion per location (RULES.md Round Structure step 5)
@@ -42,8 +43,9 @@ needs *something* concrete to run against:**
    (rational play, matches "hold and play as a response").
 5. Healing cards heal the most-injured living player 2 HP flat (no Medic
    bonus, per assumption 1).
-6. Utility cards have no modeled combat effect (their effect text is TBD).
-7. Equipment hands are sampled i.i.d. from the 14-card deck's proportions
+6. [REMOVED] Utility cards no longer exist in `equipment.csv` — see "Utility
+   Card Replacement Re-Tune" below.
+7. Equipment hands are sampled i.i.d. from the 13-card deck's proportions
    rather than tracked as an exact shared shoe — reasonable given RULES.md's
    own reshuffle-on-exhaustion rule.
 
@@ -98,6 +100,40 @@ most likely per-player-count boss HP scaling, or character passives/actives
 being required (rather than optional) at 2p. Flagging this for a follow-up
 pass rather than forcing an artificial minion number that this simulation
 shows can't actually deliver 70%.
+
+## Utility Card Replacement Re-Tune `[OPEN]`
+
+The 4 Utility-type equipment cards (`EQ-11`-`EQ-14`: Grapple Hook, Signal Flare, Emergency
+Rations, Stim Injector) had no modeled combat effect (`assumption 6` above) — placeholder
+filler with `EffectText` literally "TBD." They were replaced with 2 more Melee weapon
+upgrades (`Twin-Edge Cleaver` +2, `Vibro Blade` +1) and 2 more Ranged ammo cards (`Incendiary
+Rounds` +2, `Scatter Shot` +1), so every equipment draw now has combat value.
+`EquipmentType.Utility` was removed from the C# model entirely since no cards use it anymore.
+
+Re-running `tools/balance_simulation.py` against the new `EQUIPMENT_DECK` (all subsequent
+"Weapon Rework Re-Tune" numbers below are now **also stale**):
+
+| Players | Old best MinionCount (win rate) | New best MinionCount (win rate) |
+|---|---|---|
+| 2p | 1 (39.8%) | 1 (**74.2%**) |
+| 3p | majority 4 (68.0%) | 8 (**88.2%**) |
+| 4p | flat 7 (70.7%) | 1 (**100.0%**) |
+| 5p | majority 8 (71.5%) | 1 (**100.0%**) |
+
+Removing the 4 no-op cards meaningfully increases average damage output per hand (every card
+drawn is now a hit), which is a large buff — consistent with how steep this game's win-rate
+curve already is (see the "Weapon Rework Re-Tune" section above, and the 2p findings below).
+
+**4p and 5p hit the simulator's 100% win-rate ceiling at the minion-count floor of 1** — the
+coarse sweep (1-8 minions) no longer contains a configuration near the 70% target at those
+player counts, so minion count alone can no longer bring them down to target. This is a
+genuine open problem, not a rounding error (same category as the pre-existing "2p is a real
+finding" note below): fixing it needs a different lever — likely boss HP scaling, an extended
+minion-count range, or per-player-count equipment draw changes — rather than a same-shaped
+re-sweep. `Data/locations.csv`'s minion counts have **not** been updated to the new-deck
+figures above (updating just 2p/3p while 4p/5p have no valid target-hitting configuration
+would leave the row internally inconsistent); this needs a follow-up design pass before
+`locations.csv` is touched again.
 
 ## Physical card consequence
 

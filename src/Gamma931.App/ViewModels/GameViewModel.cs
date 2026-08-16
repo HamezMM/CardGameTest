@@ -55,8 +55,6 @@ public sealed class GameViewModel : ObservableObject
             () => IsCombatCyclePhase && _state!.PendingEquipmentTurns.Count > 0);
         HealSelfCommand = new RelayCommand(p => Run(() => _engine.PlayEquipmentFromHand(State, (EquipmentCard)p!, healTarget: CurrentTurnPlayer)),
             () => IsCombatCyclePhase && _state!.PendingEquipmentTurns.Count > 0);
-        PlayUtilityCommand = new RelayCommand(p => Run(() => _engine.PlayEquipmentFromHand(State, (EquipmentCard)p!)),
-            () => IsCombatCyclePhase && _state!.PendingEquipmentTurns.Count > 0);
 
         EndPhaseDrawCommand = new RelayCommand(() => Run(() =>
             _engine.EndPhaseDrawAndResolve(State, CombatTarget.Boss, State.PendingEquipmentTurns.Count > 0 ? State.PendingEquipmentTurns.Peek() : null)),
@@ -166,7 +164,6 @@ public sealed class GameViewModel : ObservableObject
     public RelayCommand HitBossCommand { get; }
     public RelayCommand HitMinionsCommand { get; }
     public RelayCommand HealSelfCommand { get; }
-    public RelayCommand PlayUtilityCommand { get; }
     public RelayCommand EndPhaseDrawCommand { get; }
     public RelayCommand EndPhaseAttackMeleeBossCommand { get; }
     public RelayCommand EndPhaseAttackMeleeMinionsCommand { get; }
