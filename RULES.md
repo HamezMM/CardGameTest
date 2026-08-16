@@ -16,9 +16,9 @@ Status: DRAFT — contains open design questions, marked `[OPEN]`. Not final.
   the card is discarded (single-use boost, not a permanent attachment). See "Weapons &
   Modifiers" below.
 - **A player's turn plays one equipment card first; only a weapon modifier/ammo card also lets
-  them attack.** Playing a Healing, Protection, or Utility card is the player's whole turn — no
-  attack that cycle. There is no way to attack without playing a matching modifier/ammo card
-  from hand (same as the old "no weapon card in hand → no attack" constraint).
+  them attack.** Playing a Healing or Protection card is the player's whole turn — no attack
+  that cycle. There is no way to attack without playing a matching modifier/ammo card from
+  hand (same as the old "no weapon card in hand → no attack" constraint).
 - Crab **complexity lives only on bosses**. Minions stay flat, simple HP creatures with no
   special traits (no resistances/healing/splitting on minions).
 - Position **persists** once set (playing a melee weapon keeps you in melee position until
@@ -100,8 +100,8 @@ Repeats each cycle until the round ends:
 attacks.** A player plays exactly one equipment card on their turn, same as before. If it's a
 weapon modifier (Melee) or ammo (Ranged), playing it also attacks with the matching default
 weapon (see "Weapons & Modifiers" above) — that's the whole point of playing it. If it's a
-Healing, Protection, or Utility card, that card's own effect is the whole turn; no attack
-happens that cycle.
+Healing or Protection card, that card's own effect is the whole turn; no attack happens that
+cycle.
 
 A round ends when either all crabs (boss + minions) or all players are dead.
 If crabs remain after all equipment cards are exhausted for the round, move to **End Phase Combat**.
@@ -143,7 +143,7 @@ empty) but crabs remain.
 2. Starting with the first player, each player either:
    - draws and reveals the top card of the equipment deck and resolves its effects immediately
      (same as before — a Melee/Ranged draw attacks with the bonus per "Weapons & Modifiers", a
-     Healing/Protection/Utility draw does not), **or**
+     Healing/Protection draw does not), **or**
    - `[NEW]` skips the draw and attacks with their **default melee weapon** for its flat 1 HP,
      guaranteeing at least some offense in sudden death instead of relying on a random draw.
 

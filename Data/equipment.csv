@@ -8,7 +8,7 @@ EQ-07,Makeshift Shield,Protection,"Hold and play as a response to block one crab
 EQ-08,Riot Plating,Protection,"Hold and play as a response to block one crab attack.",0
 EQ-09,Field Bandage,Healing,"Heal a player. Must be played in normal turn order, not as a response.",0
 EQ-10,Medkit,Healing,"Heal a player. Must be played in normal turn order, not as a response.",0
-EQ-11,Grapple Hook,Utility,"Utility effect — TBD.",0
-EQ-12,Signal Flare,Utility,"Utility effect — TBD.",0
-EQ-13,Emergency Rations,Utility,"Utility effect — TBD.",0
-EQ-14,Stim Injector,Utility,"Utility effect — TBD.",0
+EQ-11,Twin-Edge Cleaver,Melee,"Weapon modifier: attack with your default melee weapon, +2 damage. Playing this puts you in melee position.",2
+EQ-12,Vibro Blade,Melee,"Weapon modifier: attack with your default melee weapon, +1 damage. Playing this puts you in melee position.",1
+EQ-13,Incendiary Rounds,Ranged,"Ammo: attack with your default ranged weapon, +2 damage. Playing this puts you in range position.",2
+EQ-14,Scatter Shot,Ranged,"Ammo: attack with your default ranged weapon, +1 damage. Playing this puts you in range position.",1

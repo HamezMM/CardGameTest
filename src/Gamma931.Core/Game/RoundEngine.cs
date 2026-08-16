@@ -552,10 +552,6 @@ public sealed class RoundEngine
             case EquipmentType.Healing:
                 ResolveHeal(state, player, card, healTarget ?? player);
                 break;
-            case EquipmentType.Utility:
-                // TODO: utility effects are card/character-specific and not yet numerically designed.
-                state.LogEvent($"{player.Name} plays {card.Name}: {card.EffectText}");
-                break;
             case EquipmentType.Protection:
                 throw new InvalidOperationException($"{card.Name} should be resolved via ResolveCrabAttack, not here.");
         }
