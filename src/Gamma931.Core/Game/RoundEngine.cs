@@ -231,18 +231,6 @@ public sealed class RoundEngine
     {
         RequirePhase(state, GamePhase.CombatCycle);
 
-        // Vinewarden: regenerates 1 HP at the start of each of the first 2 combat cycles it
-        // survives per round (capped — see BALANCE_NOTES.md, an uncapped per-cycle regen was
-        // wildly overtuned).
-        if (CurrentBossAbilityActive(state, VinewardenName)
-            && state.CurrentBossHp > 0
-            && state.BossAbilityTicksThisRound < VinewardenMaxRegenTicksPerRound)
-        {
-            state.CurrentBossHp = Math.Min(state.CurrentBoss!.StartingHp, state.CurrentBossHp + VinewardenRegenPerTick);
-            state.BossAbilityTicksThisRound++;
-            state.LogEvent($"Vinewarden regrows {VinewardenRegenPerTick} HP (now {state.CurrentBossHp}/{state.CurrentBoss.StartingHp}).");
-        }
-
         state.CurrentCrabAction = state.CrabActionsThisRound.Count > 0
             ? state.CrabActionsThisRound.Dequeue()
             : null;
@@ -470,6 +458,29 @@ public sealed class RoundEngine
         }
     }
 
+    /// <summary>Computes (once) and caches the target for the attacker at the front of
+    /// <see cref="GameState.PendingCrabAttacks"/>, so the UI can show which player's protection
+    /// cards are blockable before the attack resolves. Calling this repeatedly for the same
+    /// attacker returns the same cached target rather than re-rolling Wreckstalker's ambush
+    /// chance — <see cref="ResolveNextCrabAttack"/> relies on that to resolve against exactly the
+    /// player the UI previewed.</summary>
+    public Player PeekNextCrabAttackTarget(GameState state)
+    {
+        if (state.PendingCrabAttackTarget is { } cached)
+        {
+            return cached;
+        }
+
+        if (state.PendingCrabAttacks.Count == 0)
+        {
+            throw new InvalidOperationException("No crab attacks left in this wave.");
+        }
+
+        var target = SelectAttackTargetWithAmbush(state, state.PendingCrabAttacks.Peek());
+        state.PendingCrabAttackTarget = target;
+        return target;
+    }
+
     /// <summary>End Phase Combat step 3: the next queued crab (boss or a minion) attacks.</summary>
     public void ResolveNextCrabAttack(GameState state, EquipmentCard? blockingCard = null)
     {
@@ -479,8 +490,9 @@ public sealed class RoundEngine
             throw new InvalidOperationException("No crab attacks left in this wave.");
         }
 
+        var target = PeekNextCrabAttackTarget(state);
         var attacker = state.PendingCrabAttacks.Dequeue();
-        var target = SelectAttackTargetWithAmbush(state, attacker);
+        state.PendingCrabAttackTarget = null;
         ResolveCrabAttack(
             state, target, blockingCard,
             attacker == "Boss" ? $"{state.CurrentBoss?.Name ?? "The boss"}" : "A minion",
@@ -672,8 +684,15 @@ public sealed class RoundEngine
         }
     }
 
+    /// <summary>Called exactly once whenever a combat cycle's equipment turns have all been
+    /// resolved (immediately, if nobody had a card to play; otherwise after the last one is
+    /// played) — i.e. at the true end of the cycle, mirroring
+    /// tools/boss_ability_simulation.py's end_of_cycle_regen(), which runs after that cycle's
+    /// crab attack and equipment turns rather than before them.</summary>
     private void TransitionWhenNoOneCanPlay(GameState state)
     {
+        ApplyVinewardenCycleRegen(state);
+
         var anyoneStillHasCards = state.Players.Any(p => p.IsAlive && p.Hand.Count > 0);
         if (!anyoneStillHasCards && state.AnyCrabsAlive)
         {
@@ -681,10 +700,26 @@ public sealed class RoundEngine
         }
     }
 
+    /// <summary>Vinewarden: regenerates 1 HP at the end of each of the first 2 combat cycles it
+    /// survives per round (capped — see BALANCE_NOTES.md, an uncapped per-cycle regen was
+    /// wildly overtuned).</summary>
+    private void ApplyVinewardenCycleRegen(GameState state)
+    {
+        if (CurrentBossAbilityActive(state, VinewardenName)
+            && state.CurrentBossHp > 0
+            && state.BossAbilityTicksThisRound < VinewardenMaxRegenTicksPerRound)
+        {
+            state.CurrentBossHp = Math.Min(state.CurrentBoss!.StartingHp, state.CurrentBossHp + VinewardenRegenPerTick);
+            state.BossAbilityTicksThisRound++;
+            state.LogEvent($"Vinewarden regrows {VinewardenRegenPerTick} HP (now {state.CurrentBossHp}/{state.CurrentBoss.StartingHp}).");
+        }
+    }
+
     private void BeginCrabAttackWave(GameState state)
     {
         state.Phase = GamePhase.EndPhaseCrabAttacks;
         state.PendingCrabAttacks.Clear();
+        state.PendingCrabAttackTarget = null;
 
         if (state.CurrentBossHp > 0)
         {

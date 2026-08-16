@@ -255,7 +255,9 @@ table above, matching biome-gating via `CrabBossCard.IsActiveAt()`:
 - **Frostclaw** — `DrawBoss` rolls the freeze and removes a card from a random player's
   already-drawn hand (equipment is drawn *before* the boss is revealed per RULES.md, so
   the ability acts on the hand after the fact rather than the draw count).
-- **Vinewarden** — `DrawCrabAction` applies the regen tick, capped via
+- **Vinewarden** — `TransitionWhenNoOneCanPlay` applies the regen tick at the true end of
+  each combat cycle (after that cycle's crab attack and equipment turns, matching
+  `tools/boss_ability_simulation.py`'s `end_of_cycle_regen()`), capped via
   `GameState.BossAbilityTicksThisRound`.
 - **Magmapincer** / **Tideshell** — `ResolveWeaponHit`'s boss-hit branch: each rolls once,
   latched by `BossAbilityUsedThisRound`, on the first hit that lands (Tideshell only

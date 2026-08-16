@@ -54,6 +54,12 @@ public sealed class GameState
     /// <summary>Crab attackers ("Boss" / "Minion") still owed an attack this wave of End Phase Combat.</summary>
     public Queue<string> PendingCrabAttacks { get; } = new();
 
+    /// <summary>Cached result of <see cref="Gamma931.Core.Game.RoundEngine.PeekNextCrabAttackTarget"/>
+    /// for the attacker at the front of <see cref="PendingCrabAttacks"/>, so the UI can preview which
+    /// player's protection cards are blockable without re-rolling Wreckstalker's ambush chance a
+    /// second time when the attack is actually resolved.</summary>
+    public Player? PendingCrabAttackTarget { get; set; }
+
     public List<GameEvent> Log { get; } = new();
 
     public int AliveMinionCount => CurrentMinions.Count;
