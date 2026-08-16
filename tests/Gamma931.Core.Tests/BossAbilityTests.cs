@@ -100,7 +100,7 @@ public class BossAbilityTests
 
         DriveToCombatCycle(engine, state);
 
-        Assert.Equal(location.MinionCountFor(3) + 1, state.CurrentMinions.Count);
+        Assert.Equal(boss.MinionCountFor(3) + 1, state.CurrentMinions.Count);
     }
 
     [Fact]
@@ -115,7 +115,7 @@ public class BossAbilityTests
 
         DriveToCombatCycle(engine, state);
 
-        Assert.Equal(location.MinionCountFor(3), state.CurrentMinions.Count);
+        Assert.Equal(boss.MinionCountFor(3), state.CurrentMinions.Count);
     }
 
     // ---- Sandreaver: minions get a 30% chance of +1 dmg vs. a range-position target ----
@@ -180,7 +180,7 @@ public class BossAbilityTests
         var state = BuildState(db, 3, boss, swamp, random, equipmentDeckCards: healingCards);
 
         DriveToCombatCycle(engine, state);
-        state.CurrentBossHp = boss.StartingHp - 3;
+        state.CurrentBossHp = boss.HpFor(3) - 3;
         var healedHp = state.CurrentBossHp + 1;
 
         PlayOutCombatCycle(engine, state);
@@ -385,8 +385,16 @@ public class BossAbilityTests
     {
         var db = LoadDb();
         var boss = BossNamed(db, "Ironshell");
+        var alphaDrone = BossNamed(db, "Alpha Drone");
 
-        Assert.Equal(8, boss.StartingHp);
+        // Ironshell's whole gimmick is a flat +2 HP over the baseline boss (Alpha Drone), held
+        // consistently across every player count.
+        foreach (var playerCount in new[] { 2, 3, 4, 5 })
+        {
+            Assert.Equal(alphaDrone.HpFor(playerCount) + 2, boss.HpFor(playerCount));
+        }
+
+        Assert.Equal(8, boss.HpFor(2));
         Assert.DoesNotContain("chance", boss.AbilityText, StringComparison.OrdinalIgnoreCase);
     }
 }

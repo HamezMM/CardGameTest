@@ -11,12 +11,11 @@ public sealed class LocationCard
     public required string Name { get; init; }
     public string Biome { get; init; } = string.Empty;
     public bool IsShuttle { get; init; }
+    public string FlavorText { get; init; } = string.Empty;
 
     public required IReadOnlyDictionary<int, int> EquipmentDrawByPlayerCount { get; init; }
-    public required IReadOnlyDictionary<int, int> MinionCountByPlayerCount { get; init; }
 
     public int EquipmentDrawFor(int playerCount) => Lookup(EquipmentDrawByPlayerCount, playerCount);
-    public int MinionCountFor(int playerCount) => Lookup(MinionCountByPlayerCount, playerCount);
 
     private static int Lookup(IReadOnlyDictionary<int, int> table, int playerCount)
     {

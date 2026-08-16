@@ -4,16 +4,25 @@ Status: DRAFT, same as RULES.md/ROSTER.md — produced by simulation against a
 baseline ruleset, not real playtesting. Superseded the moment real playtests
 disagree with it.
 
-**`[STALE]`** This entire pass (and `tools/balance_simulation.py` /
+**`[UPDATED]`** The minion-count numbers below were originally solved for and stored on
+`LocationCard` (`Data/locations.csv`'s `MinionCountXp` columns). They've since moved to
+`CrabBossCard` (`Data/crab_bosses.csv`'s `MinionsXp` columns), matching RULES.md's
+already-documented "boss minion count scales with player count" decision — the numbers
+themselves were carried over unchanged as a starting point, not re-solved per-boss. Boss HP
+is now per-player-count too (`HpXp`), scaling +1 HP per player above 2p (Ironshell keeps its
++2 HP offset at every player count) — a placeholder scaling, not simulated.
+
+**`[STALE]`** Separately, this entire pass (and `tools/balance_simulation.py` /
 `tools/balance_final.py` / `tools/boss_ability_simulation.py`) was run against
 the old crab-action-deck combat cadence — one random crab attacking per drawn
 crab action card. RULES.md's Combat Turn Order no longer has a crab action
 deck: the boss attacks every cycle, then every living minion also attacks
 every cycle (not just one random crab). That is materially more crab-attack
-volume per round than these simulations assumed, so the tuned `MinionCountXp`
+volume per round than these simulations assumed, so the tuned minion-count
 values and win-rate numbers below should be treated as a starting point only,
 not a validated target, until the simulator is updated to model "boss attacks,
-then players act, then every minion attacks" and re-run.
+then players act, then every minion attacks" (and the now-per-boss minion
+counts) and re-run.
 
 ## Goal
 
@@ -312,7 +321,7 @@ table above, matching biome-gating via `CrabBossCard.IsActiveAt()`:
 - **Wreckstalker** — `SelectAttackTargetWithAmbush` rolls the ambush before falling back
   to the normal melee/range/first-player priority, used by both the main cycle and End
   Phase Combat.
-- **Ironshell** / **Alpha Drone** — no code beyond `StartingHp`, already loaded from CSV.
+- **Ironshell** / **Alpha Drone** — no code beyond `CrabBossCard.HpFor(playerCount)`, already loaded from CSV.
 
 Covered by `tests/Gamma931.Core.Tests/BossAbilityTests.cs`, which forces each ability's
 probability roll deterministically (a `Random` subclass overriding `NextDouble()`) rather

@@ -10,6 +10,7 @@ public sealed class CrabMinionCard
 
     public required string Id { get; init; }
     public required string Name { get; init; }
+    public string FlavorText { get; init; } = string.Empty;
 
     public override string ToString() => Name;
 }

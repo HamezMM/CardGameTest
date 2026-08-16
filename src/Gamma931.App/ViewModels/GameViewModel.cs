@@ -51,6 +51,11 @@ public sealed class GameViewModel : ObservableObject
             () => IsPlayerTurnsPhase && _state!.PendingEquipmentTurns.Count > 0);
         HealSelfCommand = new RelayCommand(p => Run(() => _engine.PlayEquipmentFromHand(State, (EquipmentCard)p!, healTarget: CurrentTurnPlayer)),
             () => IsPlayerTurnsPhase && _state!.PendingEquipmentTurns.Count > 0);
+        HealTeammateCommand = new RelayCommand(p =>
+        {
+            var args = (object[])p!;
+            Run(() => _engine.PlayEquipmentFromHand(State, (EquipmentCard)args[0], healTarget: (Player)args[1]));
+        }, () => IsPlayerTurnsPhase && _state!.PendingEquipmentTurns.Count > 0);
 
         AttackMeleeBossCommand = new RelayCommand(() => Run(() => _engine.AttackWithDefaultMeleeWeapon(State, CombatTarget.Boss)),
             () => IsPlayerTurnsPhase && CurrentTurnPlayer is { Hand.Count: 0 });
@@ -110,7 +115,10 @@ public sealed class GameViewModel : ObservableObject
     public string PhaseText => _state?.Phase.ToString() ?? "Not started";
     public string RoundText => _state is null ? string.Empty : $"Round {_state.RoundNumber}";
     public string LocationText => _state?.CurrentLocation is { } loc ? $"{loc.Name} ({loc.Biome})" : "—";
-    public string BossText => _state?.CurrentBoss is { } boss ? $"{boss.Name} — {_state.CurrentBossHp}/{boss.StartingHp} HP" : "—";
+    public string BossText => _state?.CurrentBoss is { } boss
+        ? $"{boss.Name} — {_state.CurrentBossHp}/{boss.HpFor(_state.Players.Count)} HP " +
+          $"(+{boss.MinionCountFor(_state.Players.Count)} minion(s) @ {_state.Players.Count}p)"
+        : "—";
 
     /// <summary>Current location/boss card objects, exposed alongside the *Text summaries above so CardFaceView can look up their art.</summary>
     public LocationCard? CurrentLocationCard => _state?.CurrentLocation;
@@ -140,6 +148,11 @@ public sealed class GameViewModel : ObservableObject
     public ObservableCollection<EquipmentCard> BlockableCards { get; } = new();
     public ObservableCollection<string> LogLines { get; } = new();
 
+    /// <summary>Alive teammates (excluding the current turn player) a Healing card can be
+    /// redirected to. Only populated when a Medic is alive in the crew — RoundEngine.ResolveHeal
+    /// rejects a non-self heal target otherwise, matching the Medic's passive.</summary>
+    public ObservableCollection<Player> HealableTeammates { get; } = new();
+
     public Player? CurrentTurnPlayer => _state is { } s && s.PendingEquipmentTurns.Count > 0 ? s.PendingEquipmentTurns.Peek() : null;
     public string CurrentTurnText => CurrentTurnPlayer is { } p ? $"{p.Name}'s turn ({p.Character.Name})" : "—";
 
@@ -159,6 +172,7 @@ public sealed class GameViewModel : ObservableObject
     public RelayCommand HitBossCommand { get; }
     public RelayCommand HitMinionsCommand { get; }
     public RelayCommand HealSelfCommand { get; }
+    public RelayCommand HealTeammateCommand { get; }
     public RelayCommand AttackMeleeBossCommand { get; }
     public RelayCommand AttackMeleeMinionsCommand { get; }
 
@@ -221,6 +235,7 @@ public sealed class GameViewModel : ObservableObject
         PlayersDisplay.Clear();
         CurrentHand.Clear();
         BlockableCards.Clear();
+        HealableTeammates.Clear();
         LogLines.Clear();
 
         if (_state is null)
@@ -246,6 +261,15 @@ public sealed class GameViewModel : ObservableObject
                 player.Hand.Count,
                 player.IsAlive,
                 ReferenceEquals(player, upNext)));
+        }
+
+        var medicAlive = _state.Players.Any(p => p.IsAlive && string.Equals(p.Character.Name, "Medic", StringComparison.OrdinalIgnoreCase));
+        if (upNext is not null && medicAlive)
+        {
+            foreach (var teammate in _state.Players.Where(p => p.IsAlive && !ReferenceEquals(p, upNext)))
+            {
+                HealableTeammates.Add(teammate);
+            }
         }
 
         if (upNext is not null && _state.Phase == GamePhase.PlayerTurns)

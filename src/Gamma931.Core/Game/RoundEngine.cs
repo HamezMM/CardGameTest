@@ -160,7 +160,7 @@ public sealed class RoundEngine
 
         var boss = state.BossDeck.Draw();
         state.CurrentBoss = boss;
-        state.CurrentBossHp = boss.StartingHp;
+        state.CurrentBossHp = boss.HpFor(state.Players.Count);
 
         var activeNote = boss.IsActiveAt(location.Biome)
             ? " — its biome bonus is active here."
@@ -190,10 +190,10 @@ public sealed class RoundEngine
     public void DrawMinions(GameState state)
     {
         RequirePhase(state, GamePhase.MinionReveal);
-        var location = RequireCurrentLocation(state);
-        var count = Math.Max(1, location.MinionCountFor(state.Players.Count));
+        var boss = state.CurrentBoss ?? throw new InvalidOperationException("No boss has been revealed yet.");
+        var count = Math.Max(1, boss.MinionCountFor(state.Players.Count));
 
-        // Broodmother: 15% chance/round to breed 1 extra minion on top of the location's count.
+        // Broodmother: 15% chance/round to breed 1 extra minion on top of the boss's printed count.
         if (CurrentBossAbilityActive(state, BroodmotherName) && _random.NextDouble() < BroodmotherExtraMinionChance)
         {
             count += 1;
@@ -475,9 +475,10 @@ public sealed class RoundEngine
         // Bogfather: heals 1 HP once per round, right before the crew's first turn of combat.
         if (!state.BossAbilityUsedThisRound && CurrentBossAbilityActive(state, BogfatherName) && state.CurrentBossHp > 0)
         {
-            state.CurrentBossHp = Math.Min(state.CurrentBoss!.StartingHp, state.CurrentBossHp + BogfatherHealAmount);
+            var maxHp = state.CurrentBoss!.HpFor(state.Players.Count);
+            state.CurrentBossHp = Math.Min(maxHp, state.CurrentBossHp + BogfatherHealAmount);
             state.BossAbilityUsedThisRound = true;
-            state.LogEvent($"Bogfather passively heals {BogfatherHealAmount} HP (now {state.CurrentBossHp}/{state.CurrentBoss.StartingHp}).");
+            state.LogEvent($"Bogfather passively heals {BogfatherHealAmount} HP (now {state.CurrentBossHp}/{maxHp}).");
         }
 
         state.Phase = GamePhase.PlayerTurns;
@@ -574,7 +575,7 @@ public sealed class RoundEngine
             state.CurrentBossHp = Math.Max(0, state.CurrentBossHp - hits);
             state.LogEvent(
                 $"{player.Name} hits {boss.Name} with {weaponName} for {hits} " +
-                $"(boss HP: {state.CurrentBossHp}/{boss.StartingHp}).");
+                $"(boss HP: {state.CurrentBossHp}/{boss.HpFor(state.Players.Count)}).");
 
             // Magmapincer: 30% chance/round, decided on the first hit that lands, to burn
             // whoever dealt it for 1 unblockable damage.
@@ -620,12 +621,21 @@ public sealed class RoundEngine
 
     private void ResolveHeal(GameState state, Player player, EquipmentCard card, Player target)
     {
-        var amount = BaseHealAmount;
+        var medicAlive = state.Players.Any(p =>
+            p.IsAlive && string.Equals(p.Character.Name, MedicCharacterName, StringComparison.OrdinalIgnoreCase));
 
-        // Medic passive (ROSTER.md, fully specified): "Heals for +1 HP whenever a heal card is
-        // played (by anyone)". This is the template for wiring up the rest of the roster once
-        // their still-TBD abilities are designed.
-        if (state.Players.Any(p => p.IsAlive && string.Equals(p.Character.Name, MedicCharacterName, StringComparison.OrdinalIgnoreCase)))
+        // Medic passive (ROSTER.md, fully specified): "+1 HP whenever a heal card is played (by
+        // anyone), and lets healing cards target any teammate instead of only the player who
+        // plays them." Without a living Medic in the crew, a heal card can only patch up the
+        // player who played it — the team-heal redirect is what the Medic actually brings.
+        if (!ReferenceEquals(target, player) && !medicAlive)
+        {
+            throw new InvalidOperationException(
+                $"{card.Name} can only heal {player.Name} — only a Medic's passive lets a heal card reach a teammate, and this crew has no living Medic.");
+        }
+
+        var amount = BaseHealAmount;
+        if (medicAlive)
         {
             amount += 1;
         }
@@ -643,9 +653,10 @@ public sealed class RoundEngine
             && state.CurrentBossHp > 0
             && state.BossAbilityTicksThisRound < VinewardenMaxRegenTicksPerRound)
         {
-            state.CurrentBossHp = Math.Min(state.CurrentBoss!.StartingHp, state.CurrentBossHp + VinewardenRegenPerTick);
+            var maxHp = state.CurrentBoss!.HpFor(state.Players.Count);
+            state.CurrentBossHp = Math.Min(maxHp, state.CurrentBossHp + VinewardenRegenPerTick);
             state.BossAbilityTicksThisRound++;
-            state.LogEvent($"Vinewarden regrows {VinewardenRegenPerTick} HP (now {state.CurrentBossHp}/{state.CurrentBoss.StartingHp}).");
+            state.LogEvent($"Vinewarden regrows {VinewardenRegenPerTick} HP (now {state.CurrentBossHp}/{maxHp}).");
         }
     }
 

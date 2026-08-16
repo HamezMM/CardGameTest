@@ -26,6 +26,9 @@ public partial class CardFaceView : UserControl
     public static readonly DependencyProperty BodyTextProperty = DependencyProperty.Register(
         nameof(BodyText), typeof(string), typeof(CardFaceView), new PropertyMetadata(string.Empty));
 
+    public static readonly DependencyProperty FlavorTextProperty = DependencyProperty.Register(
+        nameof(FlavorText), typeof(string), typeof(CardFaceView), new PropertyMetadata(string.Empty));
+
     public static readonly DependencyProperty FooterTextProperty = DependencyProperty.Register(
         nameof(FooterText), typeof(string), typeof(CardFaceView), new PropertyMetadata(string.Empty));
 
@@ -55,6 +58,14 @@ public partial class CardFaceView : UserControl
     {
         get => (string)GetValue(BodyTextProperty);
         set => SetValue(BodyTextProperty, value);
+    }
+
+    /// <summary>Italicized flavor/lore text, rendered above the rules text (<see cref="BodyText"/>) — the same
+    /// "flavor above rules" convention most trading card games use to keep mechanics and story visually distinct.</summary>
+    public string FlavorText
+    {
+        get => (string)GetValue(FlavorTextProperty);
+        set => SetValue(FlavorTextProperty, value);
     }
 
     public string FooterText

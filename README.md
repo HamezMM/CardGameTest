@@ -107,12 +107,16 @@ action deck).
 
 ## Balance simulation
 
-`Data/locations.csv`'s `MinionCountXp` columns are tuned by a Monte Carlo combat simulator
-in [`tools/`](tools) rather than picked by hand, targeting a ~70% full-campaign win rate per
-player count. See [`BALANCE_NOTES.md`](BALANCE_NOTES.md) for the methodology, the explicit
-assumptions used to fill in RULES.md's still-`TBD` mechanics (equipment targeting, etc.), and
-an open finding that 2-player games can't reach 70% via minion count alone — re-run
-`tools/balance_simulation.py` once those TBDs get real rules text. Note: the simulator predates
-the no-crab-action-deck rules change (RULES.md's Combat Turn Order) and models the old
-draw-a-crab-action cadence, so its win-rate numbers should be treated as stale until it's
-updated to simulate "boss attacks, then players act, then every minion attacks" each cycle.
+The per-player-count minion counts baked into `tools/`'s Monte Carlo combat simulator (see
+`BALANCE_NOTES.md`) were originally tuned as `Data/locations.csv`'s `MinionCountXp` columns,
+targeting a ~70% full-campaign win rate per player count. That minion-count data has since
+moved to `Data/crab_bosses.csv` (`MinionsXp`), matching RULES.md's "boss minion count scales
+with player count" decision — `BALANCE_NOTES.md`'s numbers were carried over as a starting
+point, not re-solved for the new per-boss shape. See [`BALANCE_NOTES.md`](BALANCE_NOTES.md)
+for the methodology, the explicit assumptions used to fill in RULES.md's still-`TBD`
+mechanics (equipment targeting, etc.), and an open finding that 2-player games can't reach
+70% via minion count alone. Separately, the simulator predates the no-crab-action-deck rules
+change (RULES.md's Combat Turn Order) and models the old draw-a-crab-action cadence, so its
+win-rate numbers should be treated as stale until it's updated to simulate "boss attacks,
+then players act, then every minion attacks" each cycle — re-run `tools/balance_simulation.py`
+once those TBDs get real rules text and the per-boss minion counts need a real re-tune.

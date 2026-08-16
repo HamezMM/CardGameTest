@@ -1,10 +1,10 @@
-Id,Name
-MIN-01,Skitter Crab
-MIN-02,Pincer Runt
-MIN-03,Shell Grub
-MIN-04,Sand Scuttler
-MIN-05,Reef Nipper
-MIN-06,Claw Scrapper
-MIN-07,Barnacle Biter
-MIN-08,Husk Crawler
-MIN-09,Tide Snapper
+Id,Name,FlavorText
+MIN-01,Skitter Crab,"Small, fast, and everywhere at once. One hit is all it takes — the trick is landing it before it lands on you."
+MIN-02,Pincer Runt,"Too young to have grown a proper shell. It makes up for it by swarming in packs."
+MIN-03,Shell Grub,"Barely more than a larva with legs, but it still bites like it means it."
+MIN-04,Sand Scuttler,"Kicks up a cloud with every scramble across the dunes — half the fight is just seeing it coming."
+MIN-05,Reef Nipper,"Darts between cover along the reef line, snapping at anything that gets close."
+MIN-06,Claw Scrapper,"Drags one oversized claw everywhere it goes. Slow to aim, quick to swing."
+MIN-07,Barnacle Biter,"Clings to whatever's nearest — wreckage, coral, you — and doesn't let go easily."
+MIN-08,Husk Crawler,"Wears the cracked shell of something bigger that didn't make it. Doesn't slow it down any."
+MIN-09,Tide Snapper,"Rides in on the surf and strikes the moment the water pulls back."

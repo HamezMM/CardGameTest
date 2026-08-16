@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:models="clr-namespace:Gamma931.Core.Models;assembly=Gamma931.Core"
+             xmlns:game="clr-namespace:Gamma931.Core.Game;assembly=Gamma931.Core"
              xmlns:controls="clr-namespace:Gamma931.App.Controls"
              mc:Ignorable="d"
              d:DesignHeight="700" d:DesignWidth="1000">
@@ -142,7 +143,7 @@
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate DataType="{x:Type models:CrabMinionCard}">
                                             <controls:CardFaceView Card="{Binding}" Title="{Binding Name}"
-                                                                    Subtitle="Crab Minion" FooterText="1 HP"
+                                                                    Subtitle="Crab Minion" FlavorText="{Binding FlavorText}" FooterText="1 HP"
                                                                     AccentBrush="#FFA1522C"
                                                                     Width="140" Height="196" Margin="0,0,10,0" />
                                         </DataTemplate>
@@ -255,6 +256,42 @@
                                                             </Style>
                                                         </Button.Style>
                                                     </Button>
+                                                    <!-- Medic passive: with a Medic alive, a Healing card can also target a
+                                                         teammate — HealableTeammates is empty (so this renders nothing)
+                                                         whenever no Medic is in the crew. Tag carries this specific card
+                                                         (this template's own DataContext) down to the nested Player template. -->
+                                                    <ItemsControl Tag="{Binding}"
+                                                                  ItemsSource="{Binding DataContext.HealableTeammates, RelativeSource={RelativeSource AncestorType=UserControl}}">
+                                                        <ItemsControl.Style>
+                                                            <Style TargetType="ItemsControl">
+                                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding EquipmentType}" Value="Healing">
+                                                                        <Setter Property="Visibility" Value="Visible" />
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </ItemsControl.Style>
+                                                        <ItemsControl.ItemsPanel>
+                                                            <ItemsPanelTemplate>
+                                                                <WrapPanel />
+                                                            </ItemsPanelTemplate>
+                                                        </ItemsControl.ItemsPanel>
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate DataType="{x:Type game:Player}">
+                                                                <Button Content="{Binding Name, StringFormat='Heal {0}'}"
+                                                                        Command="{Binding DataContext.HealTeammateCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                                        Margin="0,0,6,6" Padding="8,4">
+                                                                    <Button.CommandParameter>
+                                                                        <MultiBinding Converter="{StaticResource HealArgs}">
+                                                                            <Binding Path="Tag" RelativeSource="{RelativeSource AncestorType=ItemsControl}" />
+                                                                            <Binding Path="." />
+                                                                        </MultiBinding>
+                                                                    </Button.CommandParameter>
+                                                                </Button>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
                                                     <TextBlock VerticalAlignment="Center" FontStyle="Italic" Foreground="Gray" TextWrapping="Wrap" TextAlignment="Center">
                                                         <TextBlock.Style>
                                                             <Style TargetType="TextBlock">

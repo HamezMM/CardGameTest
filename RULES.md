@@ -204,6 +204,10 @@ Direction:
 - The number of uses of the active scales with difficulty level (fewer uses = harder game).
 - Example: Brawler's passive is cleave — any melee weapon they play hits multiple crabs,
   scaled by their remaining HP (exact formula TBD).
+- **`[NEW]` Healing cards default to self-targeting.** A played Healing card heals only the
+  player who played it, *unless* a Medic is alive in the crew — the Medic's passive is what
+  unlocks redirecting a heal card to any teammate (on top of its own +1 HP bonus). Without a
+  living Medic, every heal card is effectively "heal self."
 
 Scope for first playtest build: **8 character archetypes**, drafted in `ROSTER.md`.
 `[OPEN]` Active abilities are still TBD for most characters — see `ROSTER.md`.

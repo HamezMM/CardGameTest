@@ -37,6 +37,10 @@
                            FontStyle="Italic" FontSize="11" Foreground="#FFB9BEC9"
                            Visibility="{Binding Subtitle, ElementName=Root, Converter={StaticResource EmptyToCollapsed}}"
                            Margin="0,1,0,0" />
+                <TextBlock Text="{Binding FlavorText, ElementName=Root}"
+                           FontStyle="Italic" FontSize="10" Foreground="#FF8D93A1" TextWrapping="Wrap"
+                           Visibility="{Binding FlavorText, ElementName=Root, Converter={StaticResource EmptyToCollapsed}}"
+                           MaxHeight="46" Margin="0,3,0,0" />
                 <TextBlock Text="{Binding BodyText, ElementName=Root}"
                            FontSize="11" Foreground="#FFDADEE6" TextWrapping="Wrap"
                            Visibility="{Binding BodyText, ElementName=Root, Converter={StaticResource EmptyToCollapsed}}"
