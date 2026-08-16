@@ -128,8 +128,8 @@ public class BossAbilityTests
         var desert = LocationFor(db, "Desert"); // Sandreaver's home biome — ability active
         var random = new AlwaysSucceedRandom();
         var engine = new RoundEngine(random);
-        var armsCard = db.DamageCards.First(d => d.BodyLocation == BodyLocation.Arms); // fixed 1 HP base
-        var state = BuildState(db, 2, boss, desert, random, damageDeckCards: new[] { armsCard });
+        var oneHpCard = db.DamageCards.First(d => !d.ArmsDebuff && d.HpCost == 1); // fixed 1 HP base, no debuff
+        var state = BuildState(db, 2, boss, desert, random, damageDeckCards: new[] { oneHpCard });
 
         engine.RevealNextLocation(state);
         engine.DrawEquipmentForAllPlayers(state);
@@ -151,8 +151,8 @@ public class BossAbilityTests
         var swamp = LocationFor(db, "Swamp"); // wrong biome — Sandreaver's ability is inactive here
         var random = new AlwaysSucceedRandom();
         var engine = new RoundEngine(random);
-        var armsCard = db.DamageCards.First(d => d.BodyLocation == BodyLocation.Arms);
-        var state = BuildState(db, 2, boss, swamp, random, damageDeckCards: new[] { armsCard });
+        var oneHpCard = db.DamageCards.First(d => !d.ArmsDebuff && d.HpCost == 1);
+        var state = BuildState(db, 2, boss, swamp, random, damageDeckCards: new[] { oneHpCard });
 
         engine.RevealNextLocation(state);
         engine.DrawEquipmentForAllPlayers(state);

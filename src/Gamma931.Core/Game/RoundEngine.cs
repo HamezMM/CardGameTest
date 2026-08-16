@@ -321,8 +321,16 @@ public sealed class RoundEngine
 
         target.TakeDamage(amount);
         state.LogEvent(
-            $"{attackerLabel} attacks {target.Name}: {damageCard.BodyLocation} hit for {amount} HP " +
+            $"{attackerLabel} attacks {target.Name} for {amount} HP " +
             $"(now {target.CurrentHp}/{Player.MaxHp}).");
+
+        if (damageCard.ArmsDebuff)
+        {
+            target.ApplyArmsDebuff();
+            state.LogEvent(
+                $"{target.Name}'s arm is hit — their attacks are 1 point less effective until healed " +
+                $"(now -{target.ArmsDebuffStacks}).");
+        }
 
         if (!target.IsAlive)
         {
@@ -564,6 +572,16 @@ public sealed class RoundEngine
 
     private void ApplyWeaponHit(GameState state, Player player, int hits, string weaponName, CombatTarget target)
     {
+        // Arms damage card debuff: each stack makes this player's attacks 1 point less
+        // effective (RULES.md), until they're healed.
+        if (player.ArmsDebuffStacks > 0)
+        {
+            var reduced = Math.Max(0, hits - player.ArmsDebuffStacks);
+            state.LogEvent(
+                $"{player.Name}'s injured arm weakens the attack with {weaponName}: {hits} -> {reduced}.");
+            hits = reduced;
+        }
+
         if (target == CombatTarget.Boss)
         {
             if (state.CurrentBoss is not { } boss || state.CurrentBossHp <= 0)

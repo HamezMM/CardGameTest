@@ -45,7 +45,8 @@ public sealed class CrabMinionCsvRow
 public sealed class DamageCsvRow
 {
     public string Id { get; set; } = string.Empty;
-    public string BodyLocation { get; set; } = string.Empty;
+    public int Value { get; set; }
+    public bool ArmsDebuff { get; set; }
 }
 
 public sealed class EquipmentCsvRow

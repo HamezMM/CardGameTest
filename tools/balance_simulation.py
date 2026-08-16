@@ -47,7 +47,9 @@ EQUIPMENT_DECK = (
 )
 BASE_WEAPON_DAMAGE = 1  # RULES.md: every player's default weapon deals this on its own
 
-# damage.csv: 28-card deck, Arms/Legs/Torso = 1 dmg (24 cards), Head = 2 dmg (4 cards)
+# damage.csv: 28-card deck, -1 = 24 cards (3 of which are the Arms debuff variant), -2 = 4
+# cards. The Arms debuff (attacks -1 until healed) isn't modeled here -- same "generic party,
+# no character-passive-like effects" floor assumption as #1 below.
 DAMAGE_DECK = [1] * 24 + [2] * 4
 
 HEAL_AMOUNT = 2  # equipment-card heal; no character bonuses modeled (see ASSUMPTIONS)

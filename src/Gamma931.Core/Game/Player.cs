@@ -21,6 +21,10 @@ public sealed class Player
 
     public int? ActiveUsesRemaining { get; set; }
 
+    /// <summary>Stacks of the Arms damage card's debuff (RULES.md): each stack makes this
+    /// player's attacks 1 point less effective, until they're healed (see <see cref="Heal"/>).</summary>
+    public int ArmsDebuffStacks { get; private set; }
+
     public bool IsAlive => CurrentHp > 0;
 
     public void TakeDamage(int amount)
@@ -28,9 +32,13 @@ public sealed class Player
         CurrentHp = Math.Max(0, CurrentHp - amount);
     }
 
+    /// <summary>Applied when an Arms damage card hits this player.</summary>
+    public void ApplyArmsDebuff() => ArmsDebuffStacks++;
+
     public void Heal(int amount)
     {
         CurrentHp = Math.Min(MaxHp, CurrentHp + amount);
+        ArmsDebuffStacks = 0;
     }
 
     public void ResetForNewRound()

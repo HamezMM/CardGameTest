@@ -88,9 +88,10 @@
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
                                 <controls:CardFaceView Card="{Binding}"
-                                                        Title="{Binding BodyLocation}"
+                                                        Title="{Binding Value, StringFormat={}{0} HP}"
                                                         Subtitle="Damage"
-                                                        FooterText="{Binding HpCost, StringFormat={}{0} HP}"
+                                                        BodyText="{Binding ArmsNote}"
+                                                        FooterText="{Binding Tag}"
                                                         AccentBrush="#FF8A3A6E" />
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>

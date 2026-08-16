@@ -54,34 +54,34 @@ KC-A,A,Clubs,K,Equipment,EQ-11,Twin-Edge Cleaver
 AS-B,B,Spades,A,Equipment,EQ-12,Vibro Blade
 2S-B,B,Spades,2,Equipment,EQ-13,Incendiary Rounds
 3S-B,B,Spades,3,Equipment,EQ-14,Scatter Shot
-4S-B,B,Spades,4,Damage,DMG-01,Damage - Arms
-5S-B,B,Spades,5,Damage,DMG-02,Damage - Arms
-6S-B,B,Spades,6,Damage,DMG-03,Damage - Arms
-7S-B,B,Spades,7,Damage,DMG-04,Damage - Arms
-8S-B,B,Spades,8,Damage,DMG-05,Damage - Arms
-9S-B,B,Spades,9,Damage,DMG-06,Damage - Arms
-10S-B,B,Spades,10,Damage,DMG-07,Damage - Arms
-JS-B,B,Spades,J,Damage,DMG-08,Damage - Arms
-QS-B,B,Spades,Q,Damage,DMG-09,Damage - Legs
-KS-B,B,Spades,K,Damage,DMG-10,Damage - Legs
-AH-B,B,Hearts,A,Damage,DMG-11,Damage - Legs
-2H-B,B,Hearts,2,Damage,DMG-12,Damage - Legs
-3H-B,B,Hearts,3,Damage,DMG-13,Damage - Legs
-4H-B,B,Hearts,4,Damage,DMG-14,Damage - Legs
-5H-B,B,Hearts,5,Damage,DMG-15,Damage - Legs
-6H-B,B,Hearts,6,Damage,DMG-16,Damage - Legs
-7H-B,B,Hearts,7,Damage,DMG-17,Damage - Torso
-8H-B,B,Hearts,8,Damage,DMG-18,Damage - Torso
-9H-B,B,Hearts,9,Damage,DMG-19,Damage - Torso
-10H-B,B,Hearts,10,Damage,DMG-20,Damage - Torso
-JH-B,B,Hearts,J,Damage,DMG-21,Damage - Torso
-QH-B,B,Hearts,Q,Damage,DMG-22,Damage - Torso
-KH-B,B,Hearts,K,Damage,DMG-23,Damage - Torso
-AD-B,B,Diamonds,A,Damage,DMG-24,Damage - Torso
-2D-B,B,Diamonds,2,Damage,DMG-25,Damage - Head
-3D-B,B,Diamonds,3,Damage,DMG-26,Damage - Head
-4D-B,B,Diamonds,4,Damage,DMG-27,Damage - Head
-5D-B,B,Diamonds,5,Damage,DMG-28,Damage - Head
+4S-B,B,Spades,4,Damage,DMG-01,Damage - -1 (Arms)
+5S-B,B,Spades,5,Damage,DMG-02,Damage - -1 (Arms)
+6S-B,B,Spades,6,Damage,DMG-03,Damage - -1 (Arms)
+7S-B,B,Spades,7,Damage,DMG-04,Damage - -1
+8S-B,B,Spades,8,Damage,DMG-05,Damage - -1
+9S-B,B,Spades,9,Damage,DMG-06,Damage - -1
+10S-B,B,Spades,10,Damage,DMG-07,Damage - -1
+JS-B,B,Spades,J,Damage,DMG-08,Damage - -1
+QS-B,B,Spades,Q,Damage,DMG-09,Damage - -1
+KS-B,B,Spades,K,Damage,DMG-10,Damage - -1
+AH-B,B,Hearts,A,Damage,DMG-11,Damage - -1
+2H-B,B,Hearts,2,Damage,DMG-12,Damage - -1
+3H-B,B,Hearts,3,Damage,DMG-13,Damage - -1
+4H-B,B,Hearts,4,Damage,DMG-14,Damage - -1
+5H-B,B,Hearts,5,Damage,DMG-15,Damage - -1
+6H-B,B,Hearts,6,Damage,DMG-16,Damage - -1
+7H-B,B,Hearts,7,Damage,DMG-17,Damage - -1
+8H-B,B,Hearts,8,Damage,DMG-18,Damage - -1
+9H-B,B,Hearts,9,Damage,DMG-19,Damage - -1
+10H-B,B,Hearts,10,Damage,DMG-20,Damage - -1
+JH-B,B,Hearts,J,Damage,DMG-21,Damage - -1
+QH-B,B,Hearts,Q,Damage,DMG-22,Damage - -1
+KH-B,B,Hearts,K,Damage,DMG-23,Damage - -1
+AD-B,B,Diamonds,A,Damage,DMG-24,Damage - -1
+2D-B,B,Diamonds,2,Damage,DMG-25,Damage - -2
+3D-B,B,Diamonds,3,Damage,DMG-26,Damage - -2
+4D-B,B,Diamonds,4,Damage,DMG-27,Damage - -2
+5D-B,B,Diamonds,5,Damage,DMG-28,Damage - -2
 6D-B,B,Diamonds,6,Unused (Reserved),,
 7D-B,B,Diamonds,7,Unused (Reserved),,
 8D-B,B,Diamonds,8,Unused (Reserved),,

@@ -37,7 +37,10 @@ the numeric rules RULES.md has already confirmed.
 ## What's confirmed vs. assumed
 
 **Confirmed (taken directly from RULES.md / the CSVs, unchanged):**
-- 6 HP per player; damage-deck distribution (24/28 cards deal 1 dmg, 4/28 deal 2)
+- 6 HP per player; damage-deck distribution (24/28 cards deal 1 dmg, 4/28 deal 2). `[UPDATED]`
+  3 of the 24 -1 cards are now flavored as Arms hits, adding a "-1 attack effectiveness until
+  healed" debuff on top of the same 1 HP hit (RULES.md "Damage & Health") — not modeled in the
+  simulator, same floor-assumption treatment as character passives below.
 - Minion crabs: flat 1 HP, any hit kills
 - Boss HP: 6 for 9 of 10 bosses, 8 for Ironshell — drawn from a single shared deck
 - Equipment deck composition and damage tiers (13 cards: 9 offensive [melee/ranged

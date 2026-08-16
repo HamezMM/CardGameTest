@@ -57,14 +57,13 @@ public class CsvCardLoaderTests
     }
 
     [Fact]
-    public void LoadFromDirectory_ParsesBodyLocationHpCostsPerRules()
+    public void LoadFromDirectory_ParsesDamageValuesAndArmsDebuffPerRules()
     {
         var db = new CsvCardLoader().LoadFromDirectory(TestDataDirectory);
 
-        Assert.All(db.DamageCards.Where(d => d.BodyLocation == BodyLocation.Arms), d => Assert.Equal(1, d.HpCost));
-        Assert.All(db.DamageCards.Where(d => d.BodyLocation == BodyLocation.Head), d => Assert.Equal(2, d.HpCost));
-        Assert.All(db.DamageCards.Where(d => d.BodyLocation == BodyLocation.Legs), d => Assert.Equal(1, d.HpCost));
-        Assert.All(db.DamageCards.Where(d => d.BodyLocation == BodyLocation.Torso), d => Assert.Equal(1, d.HpCost));
+        Assert.All(db.DamageCards, d => Assert.Contains(d.Value, new[] { -1, -2 }));
+        Assert.All(db.DamageCards.Where(d => d.ArmsDebuff), d => Assert.Equal(-1, d.Value));
+        Assert.Equal(3, db.DamageCards.Count(d => d.ArmsDebuff));
     }
 
     [Fact]
@@ -96,10 +95,12 @@ public class CsvCardLoaderTests
                 File.Copy(file, Path.Combine(tempDir, Path.GetFileName(file)));
             }
 
-            File.WriteAllText(Path.Combine(tempDir, "damage.csv"), "Id,BodyLocation\nDMG-99,NotARealLocation\n");
+            File.WriteAllText(Path.Combine(tempDir, "crab_bosses.csv"),
+                "Id,Name,Category,Biome,Concept,AbilityText,FlavorText,Hp2p,Hp3p,Hp4p,Hp5p,Minions2p,Minions3p,Minions4p,Minions5p\n" +
+                "BOSS-99,Test,NotARealCategory,,,,,6,6,6,6,1,1,1,1\n");
 
             var ex = Assert.Throws<CardDataException>(() => new CsvCardLoader().LoadFromDirectory(tempDir));
-            Assert.Contains("DMG-99", ex.Message);
+            Assert.Contains("BOSS-99", ex.Message);
         }
         finally
         {

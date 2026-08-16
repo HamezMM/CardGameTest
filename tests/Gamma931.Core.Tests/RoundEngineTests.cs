@@ -312,4 +312,83 @@ public class RoundEngineTests
         engine.DrawBoss(state);
         engine.DrawMinions(state); // ends at GamePhase.BossAttack — the boss always has full HP here
     }
+
+    // ---- Arms damage card: -1 HP plus "attacks -1 until healed" debuff (RULES.md) ----
+
+    [Fact]
+    public void ResolveCrabAttack_ArmsCard_DealsHpLossAndAppliesDebuff()
+    {
+        var db = LoadDb();
+        var engine = new RoundEngine(new Random(1));
+        var armsCard = db.DamageCards.First(d => d.ArmsDebuff);
+        var target = new Player { Name = "Target", Character = db.Characters[0] };
+        var state = new GameState
+        {
+            Players = new List<Player> { target },
+            Difficulty = DifficultyLevel.Normal,
+            EquipmentDeck = new Deck<EquipmentCard>(db.Equipment, new Random(1)),
+            DamageDeck = new Deck<DamageCard>(new[] { armsCard }, new Random(1)),
+            BossDeck = new Deck<CrabBossCard>(db.Bosses, new Random(1)),
+            CrabMinionDeck = new Deck<CrabMinionCard>(db.Minions, new Random(1)),
+            RemainingLocations = db.NonShuttleLocations.Take(1).ToList(),
+            FirstPlayerIndex = 0,
+            RoundNumber = 1,
+            Phase = GamePhase.BossAttack,
+        };
+
+        engine.ResolveCrabAttack(state, target);
+
+        Assert.Equal(Player.MaxHp - 1, target.CurrentHp);
+        Assert.Equal(1, target.ArmsDebuffStacks);
+    }
+
+    [Fact]
+    public void PlayEquipmentFromHand_WeaponHit_ReducedByArmsDebuffStacks()
+    {
+        var db = LoadDb();
+        var engine = new RoundEngine(new Random(1));
+        var boss = db.Bosses[0];
+        var attacker = new Player { Name = "Attacker", Character = db.Characters[0] };
+        attacker.ApplyArmsDebuff();
+        var bystander = new Player { Name = "Bystander", Character = db.Characters[1] };
+        var meleeCard = db.Equipment.First(e => e.EquipmentType == EquipmentType.Melee && e.DamageBonus == 1);
+        attacker.Hand.Add(meleeCard);
+        var state = new GameState
+        {
+            Players = new List<Player> { attacker, bystander },
+            Difficulty = DifficultyLevel.Normal,
+            EquipmentDeck = new Deck<EquipmentCard>(db.Equipment, new Random(1)),
+            DamageDeck = new Deck<DamageCard>(db.DamageCards, new Random(1)),
+            BossDeck = new Deck<CrabBossCard>(new[] { boss }, new Random(1)),
+            CrabMinionDeck = new Deck<CrabMinionCard>(db.Minions, new Random(1)),
+            RemainingLocations = db.NonShuttleLocations.Take(1).ToList(),
+            FirstPlayerIndex = 0,
+            RoundNumber = 1,
+            Phase = GamePhase.PlayerTurns,
+            CurrentBoss = boss,
+            CurrentBossHp = boss.HpFor(2),
+        };
+        state.PendingEquipmentTurns.Enqueue(attacker);
+
+        engine.PlayEquipmentFromHand(state, meleeCard, CombatTarget.Boss);
+
+        // Base 1 + DamageBonus 1 = 2 hits, minus the 1 Arms debuff stack = 1.
+        Assert.Equal(boss.HpFor(2) - 1, state.CurrentBossHp);
+    }
+
+    [Fact]
+    public void Heal_ClearsArmsDebuffStacks()
+    {
+        var db = LoadDb();
+        var engine = new RoundEngine(new Random(1));
+        var healer = new Player { Name = "Healer", Character = db.Characters.Single(c => c.Name == "Brawler") };
+        healer.ApplyArmsDebuff();
+        healer.TakeDamage(2);
+        var healCard = db.Equipment.First(e => e.EquipmentType == EquipmentType.Healing);
+        var state = MinimalCombatState(db, new List<Player> { healer }, healer, healCard);
+
+        engine.PlayEquipmentFromHand(state, healCard, healTarget: healer);
+
+        Assert.Equal(0, healer.ArmsDebuffStacks);
+    }
 }

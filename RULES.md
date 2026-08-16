@@ -171,10 +171,16 @@ only on bosses" decision above.
 
 ## Damage & Health
 
-Each character has 6 HP total, tracked as a **single shared pool** (not per-limb). Damage by
-body location determines how much a given hit costs against that pool:
-- Arms: 1 HP · Head: 2 HP · Legs: 1 HP · Torso: 1 HP
+Each character has 6 HP total, tracked as a **single shared pool** (not per-limb). Damage cards
+are flat **-1** or **-2** HP hits against that pool — there's no per-body-location cost anymore.
 A character dies once they've taken 6 HP of damage.
+
+**`[NEW]` Arms cards.** 3 of the -1 cards are flavored as Arms hits: on top of the -1 HP, they
+leave the target's attacks (weapon swings and equipment attacks alike) **1 point less
+effective** — a hit that would deal 1 now deals 0, a hit that would deal 2 now deals 1, and so
+on (never below 0). Each additional Arms hit stacks another -1. The penalty lasts **until that
+player is healed** (any Healing card played on them clears it entirely), not just for their
+next attack.
 
 (Per-limb HP tracking, disable-vs-injure attack stats, and permanent unhealable limb damage
 were considered and explicitly not pursued — too much bookkeeping for the "quick roguelike"

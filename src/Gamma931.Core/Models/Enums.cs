@@ -1,14 +1,5 @@
 namespace Gamma931.Core.Models;
 
-/// <summary>Body location a damage card targets. HP cost is fixed by RULES.md.</summary>
-public enum BodyLocation
-{
-    Arms,
-    Head,
-    Legs,
-    Torso,
-}
-
 /// <summary>Combat stance a player occupies. Set dynamically by the equipment they play.</summary>
 public enum Position
 {

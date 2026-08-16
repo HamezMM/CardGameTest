@@ -520,20 +520,22 @@ def render_location(cid, name, biome, is_shuttle, rng):
 
 
 DAMAGE_STYLE = {
-    "Arms": "#5a1414",
-    "Legs": "#4a1030",
-    "Torso": "#5c2a06",
-    "Head": "#2a1a52",
+    "arms": "#5a1414",
+    "minus1": "#4a1030",
+    "minus2": "#2a1a52",
 }
 
 
-def render_damage(part, rng):
-    top = DAMAGE_STYLE[part]
+def render_damage(kind, rng):
+    top = DAMAGE_STYLE[kind]
     bottom = lighten(hex_to_rgb(top), 0.28)
     img = card_base(top, "#%02x%02x%02x" % bottom)
     d = ImageDraw.Draw(img)
     color = lighten(hex_to_rgb(top), 0.38) + (255,)
-    icon_body_part(d, W / 2, H * 0.5, 230, color, part)
+    if kind == "arms":
+        icon_body_part(d, W / 2, H * 0.5, 230, color, "Arms")
+    else:
+        icon_claw_swipe(d, W / 2, H * 0.5, 230, color, rng)
     return frame(img, color)
 
 
@@ -581,9 +583,9 @@ def main():
             is_shuttle = row["IsShuttle"].strip().lower() == "true"
             save(render_location(row["Id"], row["Name"], row["Biome"], is_shuttle, rng), OUT / "locations" / f"{row['Id']}.png")
 
-    for part in ("Arms", "Legs", "Torso", "Head"):
-        rng = seeded_rng(part)
-        save(render_damage(part, rng), OUT / "damage" / f"{part}.png")
+    for kind in ("arms", "minus1", "minus2"):
+        rng = seeded_rng(kind)
+        save(render_damage(kind, rng), OUT / "damage" / f"{kind}.png")
 
     save(render_back(), OUT / "back.png")
 

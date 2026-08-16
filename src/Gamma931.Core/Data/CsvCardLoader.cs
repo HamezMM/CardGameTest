@@ -86,7 +86,8 @@ public sealed class CsvCardLoader
         ReadRows<DamageCsvRow, DamageCard>(path, row => new DamageCard
         {
             Id = row.Id,
-            BodyLocation = ParseEnum<BodyLocation>(row.BodyLocation, path, row.Id),
+            Value = row.Value,
+            ArmsDebuff = row.ArmsDebuff,
         });
 
     private List<EquipmentCard> LoadEquipment(string path) =>

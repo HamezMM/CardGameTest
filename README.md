@@ -41,9 +41,9 @@ CSVs in `/Data` -- there's no hand-authored art to keep in sync. Each category g
 color palette and icon set (character role, boss biome, equipment type, location biome, ...),
 with per-card variety from a deterministic seed on the card's Id, so re-running the script is a
 no-op unless `/Data` changed. Output goes to `src/Gamma931.App/Assets/Cards/<category>/<id>.png`
-(one PNG per character/boss/minion/equipment/location Id, plus one per damage
-`BodyLocation` since damage cards have no individual name, plus a shared card back), built into
-the app as WPF `Resource` items. Re-run it after adding or renaming a card:
+(one PNG per character/boss/minion/equipment/location Id, plus one per damage card kind —
+`arms`/`minus1`/`minus2` — since damage cards have no individual name, plus a shared card
+back), built into the app as WPF `Resource` items. Re-run it after adding or renaming a card:
 
 ```
 pip install Pillow
