@@ -11,7 +11,6 @@ public sealed class CardDatabase
     public required IReadOnlyList<CharacterCard> Characters { get; init; }
     public required IReadOnlyList<CrabBossCard> Bosses { get; init; }
     public required IReadOnlyList<CrabMinionCard> Minions { get; init; }
-    public required IReadOnlyList<CrabActionCard> CrabActions { get; init; }
     public required IReadOnlyList<DamageCard> DamageCards { get; init; }
     public required IReadOnlyList<EquipmentCard> Equipment { get; init; }
     public required IReadOnlyList<LocationCard> Locations { get; init; }

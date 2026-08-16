@@ -15,7 +15,7 @@ for the underlying mechanics these abilities plug into.
 | **Engineer** | Utility | Can recycle/reuse a spent equipment card once per round | TBD |
 | **Scout** | Positioning | Can swap position (melee↔range) once per combat cycle for free | TBD |
 | **Marksman** | Ranged | Ranged attacks deal +1 bonus damage (on top of ammo's own bonus) | TBD |
-| **Technician** | Utility | Can peek at the next crab action card before it resolves | TBD |
+| **Technician** | Utility | TBD — old passive ("peek at the next crab action card") is obsolete now that there's no crab action deck (RULES.md: every crab attacks each cycle) | TBD |
 | **Captain** | Leadership | **Team-wide**: when the Captain is first player, *every* player draws one extra equipment card that round (not just the Captain) | TBD |
 
 Notes:

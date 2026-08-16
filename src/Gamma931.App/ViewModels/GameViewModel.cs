@@ -35,39 +35,27 @@ public sealed class GameViewModel : ObservableObject
             () => _state?.Phase == GamePhase.EquipmentDraw);
         DrawBossCommand = new RelayCommand(() => Run(() => _engine.DrawBoss(State)),
             () => _state?.Phase == GamePhase.BossReveal);
-        SetAsideCrabActionsCommand = new RelayCommand(() => Run(() => _engine.SetAsideCrabActions(State)),
-            () => _state?.Phase == GamePhase.CrabActionSetAside);
         DrawMinionsCommand = new RelayCommand(() => Run(() => _engine.DrawMinions(State)),
             () => _state?.Phase == GamePhase.MinionReveal);
-        DrawCrabActionCommand = new RelayCommand(() => Run(() => _engine.DrawCrabAction(State)),
-            () => IsCombatCyclePhase && _state!.PendingEquipmentTurns.Count == 0);
         AdvanceRoundCommand = new RelayCommand(() => Run(() => _engine.AdvanceToNextRound(State)),
             () => _state?.Phase == GamePhase.RoundEnd);
 
-        TakeCrabHitCommand = new RelayCommand(() => Run(() => _engine.ResolveCrabAction(State)),
-            () => HasPendingCrabAction);
-        BlockCrabActionCommand = new RelayCommand(p => Run(() => _engine.ResolveCrabAction(State, (EquipmentCard)p!)),
-            () => HasPendingCrabAction);
+        CrabAttackTakeHitCommand = new RelayCommand(() => Run(() => _engine.ResolveNextCrabAttack(State)),
+            () => HasPendingCrabAttack);
+        CrabAttackBlockCommand = new RelayCommand(p => Run(() => _engine.ResolveNextCrabAttack(State, (EquipmentCard)p!)),
+            () => HasPendingCrabAttack);
 
         HitBossCommand = new RelayCommand(p => Run(() => _engine.PlayEquipmentFromHand(State, (EquipmentCard)p!, CombatTarget.Boss)),
-            () => IsCombatCyclePhase && _state!.PendingEquipmentTurns.Count > 0);
+            () => IsPlayerTurnsPhase && _state!.PendingEquipmentTurns.Count > 0);
         HitMinionsCommand = new RelayCommand(p => Run(() => _engine.PlayEquipmentFromHand(State, (EquipmentCard)p!, CombatTarget.Minions)),
-            () => IsCombatCyclePhase && _state!.PendingEquipmentTurns.Count > 0);
+            () => IsPlayerTurnsPhase && _state!.PendingEquipmentTurns.Count > 0);
         HealSelfCommand = new RelayCommand(p => Run(() => _engine.PlayEquipmentFromHand(State, (EquipmentCard)p!, healTarget: CurrentTurnPlayer)),
-            () => IsCombatCyclePhase && _state!.PendingEquipmentTurns.Count > 0);
+            () => IsPlayerTurnsPhase && _state!.PendingEquipmentTurns.Count > 0);
 
-        EndPhaseDrawCommand = new RelayCommand(() => Run(() =>
-            _engine.EndPhaseDrawAndResolve(State, CombatTarget.Boss, State.PendingEquipmentTurns.Count > 0 ? State.PendingEquipmentTurns.Peek() : null)),
-            () => IsEndPhaseDraw && _state!.PendingEquipmentTurns.Count > 0);
-        EndPhaseAttackMeleeBossCommand = new RelayCommand(() => Run(() => _engine.EndPhaseAttackWithDefaultMeleeWeapon(State, CombatTarget.Boss)),
-            () => IsEndPhaseDraw && _state!.PendingEquipmentTurns.Count > 0);
-        EndPhaseAttackMeleeMinionsCommand = new RelayCommand(() => Run(() => _engine.EndPhaseAttackWithDefaultMeleeWeapon(State, CombatTarget.Minions)),
-            () => IsEndPhaseDraw && _state!.PendingEquipmentTurns.Count > 0);
-
-        CrabAttackTakeHitCommand = new RelayCommand(() => Run(() => _engine.ResolveNextCrabAttack(State)),
-            () => IsEndPhaseCrabAttacks && _state!.PendingCrabAttacks.Count > 0);
-        CrabAttackBlockCommand = new RelayCommand(p => Run(() => _engine.ResolveNextCrabAttack(State, (EquipmentCard)p!)),
-            () => IsEndPhaseCrabAttacks && _state!.PendingCrabAttacks.Count > 0);
+        AttackMeleeBossCommand = new RelayCommand(() => Run(() => _engine.AttackWithDefaultMeleeWeapon(State, CombatTarget.Boss)),
+            () => IsPlayerTurnsPhase && CurrentTurnPlayer is { Hand.Count: 0 });
+        AttackMeleeMinionsCommand = new RelayCommand(() => Run(() => _engine.AttackWithDefaultMeleeWeapon(State, CombatTarget.Minions)),
+            () => IsPlayerTurnsPhase && CurrentTurnPlayer is { Hand.Count: 0 });
     }
 
     // ---- setup ----
@@ -123,17 +111,28 @@ public sealed class GameViewModel : ObservableObject
     public string RoundText => _state is null ? string.Empty : $"Round {_state.RoundNumber}";
     public string LocationText => _state?.CurrentLocation is { } loc ? $"{loc.Name} ({loc.Biome})" : "—";
     public string BossText => _state?.CurrentBoss is { } boss ? $"{boss.Name} — {_state.CurrentBossHp}/{boss.StartingHp} HP" : "—";
-    public string CrabActionText => _state?.CurrentCrabAction is { } action ? $"{action.Name}: {action.EffectText}" : "—";
 
     /// <summary>Current location/boss card objects, exposed alongside the *Text summaries above so CardFaceView can look up their art.</summary>
     public LocationCard? CurrentLocationCard => _state?.CurrentLocation;
     public CrabBossCard? CurrentBossCard => _state?.CurrentBoss;
 
-    public string PendingAttackText => _state?.PendingCrabActionTarget is { } target
-        ? $"The crab action is attacking {target.Name} — block or take the hit."
-        : string.Empty;
+    public bool HasPendingCrabAttack =>
+        _state is { } s && s.Phase is GamePhase.BossAttack or GamePhase.MinionAttacks && s.PendingCrabAttacks.Count > 0;
 
-    public bool HasPendingCrabAction => _state?.PendingCrabActionTarget is not null;
+    public string PendingAttackText
+    {
+        get
+        {
+            if (!HasPendingCrabAttack)
+            {
+                return string.Empty;
+            }
+
+            var attackerLabel = _state!.Phase == GamePhase.BossAttack ? "The boss" : "A minion";
+            var target = _engine.PeekNextCrabAttackTarget(_state);
+            return $"{attackerLabel} is attacking {target.Name} — block or take the hit.";
+        }
+    }
 
     public ObservableCollection<CrabMinionCard> MinionsDisplay { get; } = new();
     public ObservableCollection<PlayerDisplay> PlayersDisplay { get; } = new();
@@ -144,9 +143,7 @@ public sealed class GameViewModel : ObservableObject
     public Player? CurrentTurnPlayer => _state is { } s && s.PendingEquipmentTurns.Count > 0 ? s.PendingEquipmentTurns.Peek() : null;
     public string CurrentTurnText => CurrentTurnPlayer is { } p ? $"{p.Name}'s turn ({p.Character.Name})" : "—";
 
-    public bool IsCombatCyclePhase => _state?.Phase == GamePhase.CombatCycle && !HasPendingCrabAction;
-    public bool IsEndPhaseDraw => _state?.Phase == GamePhase.EndPhaseCombat;
-    public bool IsEndPhaseCrabAttacks => _state?.Phase == GamePhase.EndPhaseCrabAttacks;
+    public bool IsPlayerTurnsPhase => _state?.Phase == GamePhase.PlayerTurns;
 
     // ---- commands ----
 
@@ -155,20 +152,15 @@ public sealed class GameViewModel : ObservableObject
     public RelayCommand RevealLocationCommand { get; }
     public RelayCommand DrawEquipmentCommand { get; }
     public RelayCommand DrawBossCommand { get; }
-    public RelayCommand SetAsideCrabActionsCommand { get; }
     public RelayCommand DrawMinionsCommand { get; }
-    public RelayCommand DrawCrabActionCommand { get; }
     public RelayCommand AdvanceRoundCommand { get; }
-    public RelayCommand TakeCrabHitCommand { get; }
-    public RelayCommand BlockCrabActionCommand { get; }
+    public RelayCommand CrabAttackTakeHitCommand { get; }
+    public RelayCommand CrabAttackBlockCommand { get; }
     public RelayCommand HitBossCommand { get; }
     public RelayCommand HitMinionsCommand { get; }
     public RelayCommand HealSelfCommand { get; }
-    public RelayCommand EndPhaseDrawCommand { get; }
-    public RelayCommand EndPhaseAttackMeleeBossCommand { get; }
-    public RelayCommand EndPhaseAttackMeleeMinionsCommand { get; }
-    public RelayCommand CrabAttackTakeHitCommand { get; }
-    public RelayCommand CrabAttackBlockCommand { get; }
+    public RelayCommand AttackMeleeBossCommand { get; }
+    public RelayCommand AttackMeleeMinionsCommand { get; }
 
     private void StartGame()
     {
@@ -219,14 +211,11 @@ public sealed class GameViewModel : ObservableObject
         OnPropertyChanged(nameof(BossText));
         OnPropertyChanged(nameof(CurrentLocationCard));
         OnPropertyChanged(nameof(CurrentBossCard));
-        OnPropertyChanged(nameof(CrabActionText));
         OnPropertyChanged(nameof(PendingAttackText));
-        OnPropertyChanged(nameof(HasPendingCrabAction));
+        OnPropertyChanged(nameof(HasPendingCrabAttack));
         OnPropertyChanged(nameof(CurrentTurnPlayer));
         OnPropertyChanged(nameof(CurrentTurnText));
-        OnPropertyChanged(nameof(IsCombatCyclePhase));
-        OnPropertyChanged(nameof(IsEndPhaseDraw));
-        OnPropertyChanged(nameof(IsEndPhaseCrabAttacks));
+        OnPropertyChanged(nameof(IsPlayerTurnsPhase));
 
         MinionsDisplay.Clear();
         PlayersDisplay.Clear();
@@ -259,7 +248,7 @@ public sealed class GameViewModel : ObservableObject
                 ReferenceEquals(player, upNext)));
         }
 
-        if (upNext is not null && _state.Phase == GamePhase.CombatCycle)
+        if (upNext is not null && _state.Phase == GamePhase.PlayerTurns)
         {
             foreach (var card in upNext.Hand)
             {
@@ -267,14 +256,7 @@ public sealed class GameViewModel : ObservableObject
             }
         }
 
-        if (_state.PendingCrabActionTarget is { } blockTarget)
-        {
-            foreach (var card in blockTarget.Hand.Where(c => c.EquipmentType == EquipmentType.Protection))
-            {
-                BlockableCards.Add(card);
-            }
-        }
-        else if (_state.Phase == GamePhase.EndPhaseCrabAttacks && _state.PendingCrabAttacks.Count > 0)
+        if (HasPendingCrabAttack)
         {
             var previewTarget = _engine.PeekNextCrabAttackTarget(_state);
             foreach (var card in previewTarget.Hand.Where(c => c.EquipmentType == EquipmentType.Protection))

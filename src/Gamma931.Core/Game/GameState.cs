@@ -11,7 +11,6 @@ public sealed class GameState
     public required Deck<EquipmentCard> EquipmentDeck { get; init; }
     public required Deck<DamageCard> DamageDeck { get; init; }
     public required Deck<CrabBossCard> BossDeck { get; init; }
-    public required Deck<CrabActionCard> CrabActionDeck { get; init; }
     public required Deck<CrabMinionCard> CrabMinionDeck { get; init; }
 
     /// <summary>Locations still to be revealed this game, in reveal order. The shuttle is always last.</summary>
@@ -26,19 +25,6 @@ public sealed class GameState
     public int CurrentBossHp { get; set; }
     public List<CrabMinionCard> CurrentMinions { get; } = new();
 
-    /// <summary>Face-down pile set aside for the round (RULES.md step 4), drawn down through combat.</summary>
-    public Queue<CrabActionCard> CrabActionsThisRound { get; } = new();
-    public CrabActionCard? CurrentCrabAction { get; set; }
-
-    /// <summary>Set by DrawCrabAction when a crab action card triggers an attack still awaiting
-    /// resolution (so the target gets a chance to block before equipment turns continue).</summary>
-    public Player? PendingCrabActionTarget { get; set; }
-
-    /// <summary>"Boss" or "Minion" — which crab DrawCrabAction picked to make the pending attack,
-    /// so ResolveCrabAction can apply attacker-specific boss abilities (e.g. Sandreaver only
-    /// buffs minion attacks).</summary>
-    public string? PendingCrabActionAttacker { get; set; }
-
     /// <summary>Generic once-per-round latch for boss abilities that fire a single time each round
     /// (Bogfather's heal, Magmapincer's burn, Tideshell's split). Safe to share across bosses since
     /// only one boss is in play per round. Reset in <see cref="Gamma931.Core.Game.RoundEngine.RevealNextLocation"/>.</summary>
@@ -48,10 +34,12 @@ public sealed class GameState
     /// (Vinewarden's regen). Reset alongside <see cref="BossAbilityUsedThisRound"/>.</summary>
     public int BossAbilityTicksThisRound { get; set; }
 
-    /// <summary>Players still owed an equipment play this combat cycle / End Phase pass.</summary>
+    /// <summary>Players still owed an equipment turn this Player Turns step.</summary>
     public Queue<Player> PendingEquipmentTurns { get; } = new();
 
-    /// <summary>Crab attackers ("Boss" / "Minion") still owed an attack this wave of End Phase Combat.</summary>
+    /// <summary>Crab attackers ("Boss" / "Minion") still owed an attack this wave (Boss Attack
+    /// step queues at most one "Boss" entry; Minion Attacks step queues one "Minion" entry per
+    /// living minion).</summary>
     public Queue<string> PendingCrabAttacks { get; } = new();
 
     /// <summary>Cached result of <see cref="Gamma931.Core.Game.RoundEngine.PeekNextCrabAttackTarget"/>

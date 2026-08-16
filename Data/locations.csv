@@ -1,9 +1,9 @@
-Id,Name,Biome,IsShuttle,EquipmentDraw2p,EquipmentDraw3p,EquipmentDraw4p,EquipmentDraw5p,CrabActionCount2p,CrabActionCount3p,CrabActionCount4p,CrabActionCount5p,MinionCount2p,MinionCount3p,MinionCount4p,MinionCount5p
-LOC-01,Dune Wastes,Desert,false,4,3,3,2,4,5,6,7,1,5,7,7
-LOC-02,Rot Marsh,Swamp,false,4,3,3,2,4,5,6,7,1,5,7,7
-LOC-03,Frozen Reach,Ice/Tundra,false,4,3,3,2,4,5,6,7,1,4,7,8
-LOC-04,Overgrown Canopy,Jungle,false,4,3,3,2,4,5,6,7,1,4,7,8
-LOC-05,Ashen Caldera,Volcanic/Caves,false,4,3,3,2,4,5,6,7,1,4,7,8
-LOC-06,Derelict Hull,Ruins/Wreckage,false,4,3,3,2,4,5,6,7,1,4,7,8
-LOC-07,Shallow Reef,Coastal/Reef,false,4,3,3,2,4,5,6,7,1,4,7,8
-LOC-08,Shuttle,,true,0,0,0,0,0,0,0,0,0,0,0,0
+Id,Name,Biome,IsShuttle,EquipmentDraw2p,EquipmentDraw3p,EquipmentDraw4p,EquipmentDraw5p,MinionCount2p,MinionCount3p,MinionCount4p,MinionCount5p
+LOC-01,Dune Wastes,Desert,false,4,3,3,2,1,5,7,7
+LOC-02,Rot Marsh,Swamp,false,4,3,3,2,1,5,7,7
+LOC-03,Frozen Reach,Ice/Tundra,false,4,3,3,2,1,4,7,8
+LOC-04,Overgrown Canopy,Jungle,false,4,3,3,2,1,4,7,8
+LOC-05,Ashen Caldera,Volcanic/Caves,false,4,3,3,2,1,4,7,8
+LOC-06,Derelict Hull,Ruins/Wreckage,false,4,3,3,2,1,4,7,8
+LOC-07,Shallow Reef,Coastal/Reef,false,4,3,3,2,1,4,7,8
+LOC-08,Shuttle,,true,0,0,0,0,0,0,0,0

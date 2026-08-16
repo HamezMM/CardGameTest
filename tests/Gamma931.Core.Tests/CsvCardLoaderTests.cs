@@ -10,14 +10,13 @@ public class CsvCardLoaderTests
         Path.Combine(AppContext.BaseDirectory, "TestData");
 
     [Fact]
-    public void LoadFromDirectory_ReadsAllSevenCardTypes()
+    public void LoadFromDirectory_ReadsAllSixCardTypes()
     {
         var db = new CsvCardLoader().LoadFromDirectory(TestDataDirectory);
 
         Assert.NotEmpty(db.Characters);
         Assert.NotEmpty(db.Bosses);
         Assert.NotEmpty(db.Minions);
-        Assert.NotEmpty(db.CrabActions);
         Assert.NotEmpty(db.DamageCards);
         Assert.NotEmpty(db.Equipment);
         Assert.NotEmpty(db.Locations);

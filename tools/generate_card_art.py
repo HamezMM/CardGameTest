@@ -519,18 +519,6 @@ def render_location(cid, name, biome, is_shuttle, rng):
     return frame(img, hex_to_rgb(bottom) + (255,))
 
 
-def render_crab_action(cid, name, rng):
-    img = card_base("#3a2b06", "#8a641c")
-    d = ImageDraw.Draw(img)
-    color = (255, 205, 90, 255)
-    motif = rng.choice([icon_claw_swipe, icon_lightning])
-    if motif is icon_claw_swipe:
-        icon_claw_swipe(d, W / 2, H * 0.46, 220, color, rng)
-    else:
-        icon_lightning(d, W / 2, H * 0.46, 220, color)
-    return frame(img, (255, 220, 140, 255))
-
-
 DAMAGE_STYLE = {
     "Arms": "#5a1414",
     "Legs": "#4a1030",
@@ -564,7 +552,7 @@ def save(img: Image.Image, path: Path):
 
 
 def main():
-    for sub in ("characters", "bosses", "minions", "equipment", "locations", "crab_actions", "damage"):
+    for sub in ("characters", "bosses", "minions", "equipment", "locations", "damage"):
         (OUT / sub).mkdir(parents=True, exist_ok=True)
 
     with open(DATA / "characters.csv", newline="", encoding="utf-8") as f:
@@ -592,11 +580,6 @@ def main():
             rng = seeded_rng(row["Id"])
             is_shuttle = row["IsShuttle"].strip().lower() == "true"
             save(render_location(row["Id"], row["Name"], row["Biome"], is_shuttle, rng), OUT / "locations" / f"{row['Id']}.png")
-
-    with open(DATA / "crab_actions.csv", newline="", encoding="utf-8") as f:
-        for row in csv.DictReader(f):
-            rng = seeded_rng(row["Id"])
-            save(render_crab_action(row["Id"], row["Name"], rng), OUT / "crab_actions" / f"{row['Id']}.png")
 
     for part in ("Arms", "Legs", "Torso", "Head"):
         rng = seeded_rng(part)

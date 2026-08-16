@@ -33,13 +33,6 @@ public sealed class CrabMinionCsvRow
     public string Name { get; set; } = string.Empty;
 }
 
-public sealed class CrabActionCsvRow
-{
-    public string Id { get; set; } = string.Empty;
-    public string Name { get; set; } = string.Empty;
-    public string EffectText { get; set; } = string.Empty;
-}
-
 public sealed class DamageCsvRow
 {
     public string Id { get; set; } = string.Empty;
@@ -65,10 +58,6 @@ public sealed class LocationCsvRow
     public int EquipmentDraw3p { get; set; }
     public int EquipmentDraw4p { get; set; }
     public int EquipmentDraw5p { get; set; }
-    public int CrabActionCount2p { get; set; }
-    public int CrabActionCount3p { get; set; }
-    public int CrabActionCount4p { get; set; }
-    public int CrabActionCount5p { get; set; }
     public int MinionCount2p { get; set; }
     public int MinionCount3p { get; set; }
     public int MinionCount4p { get; set; }
