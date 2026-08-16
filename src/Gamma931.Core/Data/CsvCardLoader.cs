@@ -58,7 +58,21 @@ public sealed class CsvCardLoader
             Biome = row.Biome,
             Concept = row.Concept,
             AbilityText = row.AbilityText,
-            StartingHp = row.StartingHp,
+            FlavorText = row.FlavorText,
+            HpByPlayerCount = new Dictionary<int, int>
+            {
+                [2] = row.Hp2p,
+                [3] = row.Hp3p,
+                [4] = row.Hp4p,
+                [5] = row.Hp5p,
+            },
+            MinionCountByPlayerCount = new Dictionary<int, int>
+            {
+                [2] = row.Minions2p,
+                [3] = row.Minions3p,
+                [4] = row.Minions4p,
+                [5] = row.Minions5p,
+            },
         });
 
     private List<CrabMinionCard> LoadMinions(string path) =>
@@ -66,6 +80,7 @@ public sealed class CsvCardLoader
         {
             Id = row.Id,
             Name = row.Name,
+            FlavorText = row.FlavorText,
         });
 
     private List<CrabActionCard> LoadCrabActions(string path) =>
@@ -100,6 +115,7 @@ public sealed class CsvCardLoader
             Name = row.Name,
             Biome = row.Biome,
             IsShuttle = row.IsShuttle,
+            FlavorText = row.FlavorText,
             EquipmentDrawByPlayerCount = new Dictionary<int, int>
             {
                 [2] = row.EquipmentDraw2p,
@@ -113,13 +129,6 @@ public sealed class CsvCardLoader
                 [3] = row.CrabActionCount3p,
                 [4] = row.CrabActionCount4p,
                 [5] = row.CrabActionCount5p,
-            },
-            MinionCountByPlayerCount = new Dictionary<int, int>
-            {
-                [2] = row.MinionCount2p,
-                [3] = row.MinionCount3p,
-                [4] = row.MinionCount4p,
-                [5] = row.MinionCount5p,
             },
         });
 

@@ -155,8 +155,8 @@ public class RoundEngineTests
     {
         var db = LoadDb();
         var engine = new RoundEngine(new Random(5));
-        // 2p locations always call for exactly 1 minion (locations.csv MinionCount2p), so a
-        // 1-card minion deck is fully drained by a single DrawMinions call.
+        // Every boss calls for exactly 1 minion at 2p (crab_bosses.csv Minions2p), so a 1-card
+        // minion deck is fully drained by a single DrawMinions call regardless of which boss is drawn.
         var smallMinionDeck = new Deck<CrabMinionCard>(db.Minions.Take(1), new Random(5));
         var state = new GameState
         {
@@ -209,6 +209,75 @@ public class RoundEngineTests
 
         Assert.Single(redrawn);
         Assert.Equal(0, state.CrabMinionDeck.DiscardPileCount);
+    }
+
+    // ---- Medic passive: heal cards only self-target unless a Medic is alive in the crew ----
+
+    private static GameState MinimalCombatState(CardDatabase db, List<Player> players, Player healer, EquipmentCard healCard)
+    {
+        healer.Hand.Add(healCard);
+        var state = new GameState
+        {
+            Players = players,
+            Difficulty = DifficultyLevel.Normal,
+            EquipmentDeck = new Deck<EquipmentCard>(db.Equipment, new Random(1)),
+            DamageDeck = new Deck<DamageCard>(db.DamageCards, new Random(1)),
+            BossDeck = new Deck<CrabBossCard>(db.Bosses, new Random(1)),
+            CrabActionDeck = new Deck<CrabActionCard>(db.CrabActions, new Random(1)),
+            CrabMinionDeck = new Deck<CrabMinionCard>(db.Minions, new Random(1)),
+            RemainingLocations = db.NonShuttleLocations.Take(1).ToList(),
+            FirstPlayerIndex = 0,
+            RoundNumber = 1,
+            Phase = GamePhase.CombatCycle,
+        };
+        state.PendingEquipmentTurns.Enqueue(healer);
+        return state;
+    }
+
+    [Fact]
+    public void PlayEquipmentFromHand_Heal_CanTargetTeammate_WhenMedicIsAlive()
+    {
+        var db = LoadDb();
+        var engine = new RoundEngine(new Random(1));
+        var healer = new Player { Name = "Healer", Character = db.Characters.Single(c => c.Name == "Brawler") };
+        var patient = new Player { Name = "Patient", Character = db.Characters.Single(c => c.Name == "Medic") };
+        patient.TakeDamage(3);
+        var healCard = db.Equipment.First(e => e.EquipmentType == EquipmentType.Healing);
+        var state = MinimalCombatState(db, new List<Player> { healer, patient }, healer, healCard);
+
+        engine.PlayEquipmentFromHand(state, healCard, healTarget: patient);
+
+        // BaseHealAmount (2) + Medic's +1 passive bonus = 3, exactly offsetting the 3 damage taken.
+        Assert.Equal(Player.MaxHp, patient.CurrentHp);
+    }
+
+    [Fact]
+    public void PlayEquipmentFromHand_Heal_ThrowsWhenTargetingTeammate_WithoutMedic()
+    {
+        var db = LoadDb();
+        var engine = new RoundEngine(new Random(1));
+        var healer = new Player { Name = "Healer", Character = db.Characters.Single(c => c.Name == "Brawler") };
+        var patient = new Player { Name = "Patient", Character = db.Characters.Single(c => c.Name == "Biologist") };
+        var healCard = db.Equipment.First(e => e.EquipmentType == EquipmentType.Healing);
+        var state = MinimalCombatState(db, new List<Player> { healer, patient }, healer, healCard);
+
+        Assert.Throws<InvalidOperationException>(() => engine.PlayEquipmentFromHand(state, healCard, healTarget: patient));
+    }
+
+    [Fact]
+    public void PlayEquipmentFromHand_Heal_SelfTargetAlwaysAllowed_WithoutMedic()
+    {
+        var db = LoadDb();
+        var engine = new RoundEngine(new Random(1));
+        var healer = new Player { Name = "Healer", Character = db.Characters.Single(c => c.Name == "Brawler") };
+        var bystander = new Player { Name = "Bystander", Character = db.Characters.Single(c => c.Name == "Biologist") };
+        healer.TakeDamage(2);
+        var healCard = db.Equipment.First(e => e.EquipmentType == EquipmentType.Healing);
+        var state = MinimalCombatState(db, new List<Player> { healer, bystander }, healer, healCard);
+
+        engine.PlayEquipmentFromHand(state, healCard, healTarget: healer);
+
+        Assert.Equal(Player.MaxHp, healer.CurrentHp);
     }
 
     private static void DriveToCombatCycle(RoundEngine engine, GameState state)

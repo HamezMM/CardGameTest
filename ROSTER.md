@@ -11,7 +11,7 @@ for the underlying mechanics these abilities plug into.
 |---|---|---|---|
 | **Brawler** | Melee | Cleave — melee weapons hit multiple crabs, scaled by remaining HP (formula TBD) | TBD |
 | **Biologist** | Support | **Debuffs** the current boss's biome bonus (reduces it, does not cancel it) | TBD |
-| **Medic** | Support | Heals for **+1 HP** whenever a heal card is played (by anyone) | **Full team heal**: every player heals 3 HP flat (half of 6 max), capped at max HP |
+| **Medic** | Support | Heals for **+1 HP** whenever a heal card is played (by anyone), and lets healing cards **target any teammate** instead of only the player who plays them (without a Medic in the crew, heal cards can only self-heal) | **Full team heal**: every player heals 3 HP flat (half of 6 max), capped at max HP |
 | **Engineer** | Utility | Can recycle/reuse a spent equipment card once per round | TBD |
 | **Scout** | Positioning | Can swap position (melee↔range) once per combat cycle for free | TBD |
 | **Marksman** | Ranged | Ranged attacks deal +1 bonus damage (on top of ammo's own bonus) | TBD |

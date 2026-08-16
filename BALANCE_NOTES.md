@@ -4,6 +4,14 @@ Status: DRAFT, same as RULES.md/ROSTER.md — produced by simulation against a
 baseline ruleset, not real playtesting. Superseded the moment real playtests
 disagree with it.
 
+**`[UPDATED]`** The minion-count numbers below were originally solved for and stored on
+`LocationCard` (`Data/locations.csv`'s `MinionCountXp` columns). They've since moved to
+`CrabBossCard` (`Data/crab_bosses.csv`'s `MinionsXp` columns), matching RULES.md's
+already-documented "boss minion count scales with player count" decision — the numbers
+themselves were carried over unchanged as a starting point, not re-solved per-boss. Boss HP
+is now per-player-count too (`HpXp`), scaling +1 HP per player above 2p (Ironshell keeps its
++2 HP offset at every player count) — a placeholder scaling, not simulated.
+
 ## Goal
 
 RULES.md leaves per-location minion counts as an open numbers-balance question
@@ -301,7 +309,7 @@ table above, matching biome-gating via `CrabBossCard.IsActiveAt()`:
 - **Wreckstalker** — `SelectAttackTargetWithAmbush` rolls the ambush before falling back
   to the normal melee/range/first-player priority, used by both the main cycle and End
   Phase Combat.
-- **Ironshell** / **Alpha Drone** — no code beyond `StartingHp`, already loaded from CSV.
+- **Ironshell** / **Alpha Drone** — no code beyond `CrabBossCard.HpFor(playerCount)`, already loaded from CSV.
 
 Covered by `tests/Gamma931.Core.Tests/BossAbilityTests.cs`, which forces each ability's
 probability roll deterministically (a `Random` subclass overriding `NextDouble()`) rather

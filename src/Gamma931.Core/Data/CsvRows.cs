@@ -24,13 +24,22 @@ public sealed class CrabBossCsvRow
     public string Biome { get; set; } = string.Empty;
     public string Concept { get; set; } = string.Empty;
     public string AbilityText { get; set; } = string.Empty;
-    public int StartingHp { get; set; }
+    public string FlavorText { get; set; } = string.Empty;
+    public int Hp2p { get; set; }
+    public int Hp3p { get; set; }
+    public int Hp4p { get; set; }
+    public int Hp5p { get; set; }
+    public int Minions2p { get; set; }
+    public int Minions3p { get; set; }
+    public int Minions4p { get; set; }
+    public int Minions5p { get; set; }
 }
 
 public sealed class CrabMinionCsvRow
 {
     public string Id { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
+    public string FlavorText { get; set; } = string.Empty;
 }
 
 public sealed class CrabActionCsvRow
@@ -61,6 +70,7 @@ public sealed class LocationCsvRow
     public string Name { get; set; } = string.Empty;
     public string Biome { get; set; } = string.Empty;
     public bool IsShuttle { get; set; }
+    public string FlavorText { get; set; } = string.Empty;
     public int EquipmentDraw2p { get; set; }
     public int EquipmentDraw3p { get; set; }
     public int EquipmentDraw4p { get; set; }
@@ -69,8 +79,4 @@ public sealed class LocationCsvRow
     public int CrabActionCount3p { get; set; }
     public int CrabActionCount4p { get; set; }
     public int CrabActionCount5p { get; set; }
-    public int MinionCount2p { get; set; }
-    public int MinionCount3p { get; set; }
-    public int MinionCount4p { get; set; }
-    public int MinionCount5p { get; set; }
 }

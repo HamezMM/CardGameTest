@@ -36,6 +36,28 @@ public class CsvCardLoaderTests
     }
 
     [Fact]
+    public void LoadFromDirectory_ParsesBossHpAndMinionCountByPlayerCount()
+    {
+        var db = new CsvCardLoader().LoadFromDirectory(TestDataDirectory);
+
+        var ironshell = Assert.Single(db.Bosses, b => b.Name == "Ironshell");
+        Assert.Equal(8, ironshell.HpFor(2));
+        Assert.True(ironshell.HpFor(5) > ironshell.HpFor(2));
+        Assert.True(ironshell.MinionCountFor(5) >= ironshell.MinionCountFor(2));
+
+        Assert.All(db.Bosses, b => Assert.False(string.IsNullOrWhiteSpace(b.FlavorText)));
+    }
+
+    [Fact]
+    public void LoadFromDirectory_ParsesFlavorTextForLocationsAndMinions()
+    {
+        var db = new CsvCardLoader().LoadFromDirectory(TestDataDirectory);
+
+        Assert.All(db.Locations.Where(l => !l.IsShuttle), l => Assert.False(string.IsNullOrWhiteSpace(l.FlavorText)));
+        Assert.All(db.Minions, m => Assert.False(string.IsNullOrWhiteSpace(m.FlavorText)));
+    }
+
+    [Fact]
     public void LoadFromDirectory_ParsesBodyLocationHpCostsPerRules()
     {
         var db = new CsvCardLoader().LoadFromDirectory(TestDataDirectory);

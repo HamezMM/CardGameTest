@@ -5,5 +5,6 @@
     <Application.Resources>
         <converters:CardToImagePathConverter x:Key="CardImage" />
         <converters:NullToVisibilityConverter x:Key="NullToCollapsed" />
+        <converters:HealArgsConverter x:Key="HealArgs" />
     </Application.Resources>
 </Application>

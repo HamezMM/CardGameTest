@@ -55,8 +55,9 @@
                                 <controls:CardFaceView Card="{Binding}"
                                                         Title="{Binding Name}"
                                                         Subtitle="{Binding Concept}"
+                                                        FlavorText="{Binding FlavorText}"
                                                         BodyText="{Binding AbilityText}"
-                                                        FooterText="{Binding StartingHp, StringFormat={}{0} HP}"
+                                                        FooterText="{Binding StatsSummary}"
                                                         AccentBrush="#FFA83A1C" />
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
@@ -72,6 +73,7 @@
                                 <controls:CardFaceView Card="{Binding}"
                                                         Title="{Binding Name}"
                                                         Subtitle="Crab Minion"
+                                                        FlavorText="{Binding FlavorText}"
                                                         FooterText="1 HP"
                                                         AccentBrush="#FFA1522C" />
                             </DataTemplate>
@@ -136,6 +138,7 @@
                                 <controls:CardFaceView Card="{Binding}"
                                                         Title="{Binding Name}"
                                                         Subtitle="{Binding Biome}"
+                                                        FlavorText="{Binding FlavorText}"
                                                         AccentBrush="#FF2C9AA8" />
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
