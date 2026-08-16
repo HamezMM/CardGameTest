@@ -4,6 +4,17 @@ Status: DRAFT, same as RULES.md/ROSTER.md — produced by simulation against a
 baseline ruleset, not real playtesting. Superseded the moment real playtests
 disagree with it.
 
+**`[STALE]`** This entire pass (and `tools/balance_simulation.py` /
+`tools/balance_final.py` / `tools/boss_ability_simulation.py`) was run against
+the old crab-action-deck combat cadence — one random crab attacking per drawn
+crab action card. RULES.md's Combat Turn Order no longer has a crab action
+deck: the boss attacks every cycle, then every living minion also attacks
+every cycle (not just one random crab). That is materially more crab-attack
+volume per round than these simulations assumed, so the tuned `MinionCountXp`
+values and win-rate numbers below should be treated as a starting point only,
+not a validated target, until the simulator is updated to model "boss attacks,
+then players act, then every minion attacks" and re-run.
+
 ## Goal
 
 RULES.md leaves per-location minion counts as an open numbers-balance question

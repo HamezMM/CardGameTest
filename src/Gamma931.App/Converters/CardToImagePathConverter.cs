@@ -20,7 +20,6 @@ public sealed class CardToImagePathConverter : IValueConverter
         CrabMinionCard c => CardImageCatalog.For(c),
         EquipmentCard c => CardImageCatalog.For(c),
         LocationCard c => CardImageCatalog.For(c),
-        CrabActionCard c => CardImageCatalog.For(c),
         DamageCard c => CardImageCatalog.For(c),
         _ => CardImageCatalog.Back,
     };

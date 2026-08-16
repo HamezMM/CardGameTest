@@ -52,7 +52,6 @@ public class BossAbilityTests
             EquipmentDeck = new Deck<EquipmentCard>(equipmentDeckCards ?? db.Equipment, random),
             DamageDeck = new Deck<DamageCard>(damageDeckCards ?? db.DamageCards, random),
             BossDeck = new Deck<CrabBossCard>(new[] { boss }, random),
-            CrabActionDeck = new Deck<CrabActionCard>(db.CrabActions, random),
             CrabMinionDeck = new Deck<CrabMinionCard>(db.Minions, random),
             RemainingLocations = new List<LocationCard> { location },
             FirstPlayerIndex = 0,
@@ -61,12 +60,13 @@ public class BossAbilityTests
         };
     }
 
+    /// <summary>Drives through to GamePhase.BossAttack — the boss always has full HP here, so
+    /// there's always exactly one pending "Boss" attack queued.</summary>
     private static void DriveToCombatCycle(RoundEngine engine, GameState state)
     {
         engine.RevealNextLocation(state);
         engine.DrawEquipmentForAllPlayers(state);
         engine.DrawBoss(state);
-        engine.SetAsideCrabActions(state);
         engine.DrawMinions(state);
     }
 
@@ -166,28 +166,29 @@ public class BossAbilityTests
         Assert.Equal(Player.MaxHp - 1, target.CurrentHp); // base damage only, no bonus off-biome
     }
 
-    // ---- Bogfather: heals 1 HP once, right before End Phase Combat, not every iteration ----
+    // ---- Bogfather: heals 1 HP once, right before the crew's first turn, not every cycle ----
 
     [Fact]
-    public void Bogfather_HealsOnceBeforeEndPhase_AndDoesNotReheal_OnLaterIterations()
+    public void Bogfather_HealsOnceBeforeFirstPlayerTurn_AndDoesNotReheal_OnLaterCycles()
     {
         var db = LoadDb();
         var boss = BossNamed(db, "Bogfather");
         var swamp = LocationFor(db, "Swamp");
         var random = new Random(42);
         var engine = new RoundEngine(random);
-        var state = BuildState(db, 3, boss, swamp, random);
+        var healingCards = RepeatToFillDeck(db.Equipment.Where(e => e.EquipmentType == EquipmentType.Healing));
+        var state = BuildState(db, 3, boss, swamp, random, equipmentDeckCards: healingCards);
 
         DriveToCombatCycle(engine, state);
         state.CurrentBossHp = boss.StartingHp - 3;
         var healedHp = state.CurrentBossHp + 1;
 
-        engine.BeginEndPhaseCombat(state);
+        PlayOutCombatCycle(engine, state);
         Assert.Equal(healedHp, state.CurrentBossHp);
         Assert.True(state.BossAbilityUsedThisRound);
 
-        // A second End Phase iteration (RULES.md's "repeat until the round is over") must not heal again.
-        engine.BeginEndPhaseCombat(state);
+        // A second combat cycle (RULES.md's cycle repeats until the round is over) must not heal again.
+        PlayOutCombatCycle(engine, state);
         Assert.Equal(healedHp, state.CurrentBossHp);
     }
 
@@ -235,18 +236,33 @@ public class BossAbilityTests
 
     // ---- Vinewarden: regenerates 1 HP/cycle, capped at the first 2 cycles it survives per round ----
 
-    /// <summary>Drives one full combat cycle — crab action draw through the last queued
-    /// equipment play — using only Healing cards (a no-op here: players start and stay at
-    /// Player.MaxHp, and ResolveHeal never touches boss HP), so the cycle completes and fires
-    /// Vinewarden's end-of-cycle regen check without any combat side effect on boss/player HP
-    /// muddying the assertions.</summary>
+    /// <summary>Plays out one full combat cycle — the boss's own attack (if alive), every living
+    /// player's equipment turn, then every living minion's attack — taking every crab attack
+    /// unblocked and playing hand[0] each turn (or swinging the default melee weapon once a hand
+    /// is empty). Stops early if the round ends mid-cycle.</summary>
     private static void PlayOutCombatCycle(RoundEngine engine, GameState state)
     {
-        engine.DrawCrabAction(state);
-        while (state.PendingEquipmentTurns.Count > 0)
+        while (state.Phase == GamePhase.BossAttack && state.PendingCrabAttacks.Count > 0)
+        {
+            engine.ResolveNextCrabAttack(state);
+        }
+
+        while (state.Phase == GamePhase.PlayerTurns && state.PendingEquipmentTurns.Count > 0)
         {
             var player = state.PendingEquipmentTurns.Peek();
-            engine.PlayEquipmentFromHand(state, player.Hand[0]);
+            if (player.Hand.Count > 0)
+            {
+                engine.PlayEquipmentFromHand(state, player.Hand[0]);
+            }
+            else
+            {
+                engine.AttackWithDefaultMeleeWeapon(state);
+            }
+        }
+
+        while (state.Phase == GamePhase.MinionAttacks && state.PendingCrabAttacks.Count > 0)
+        {
+            engine.ResolveNextCrabAttack(state);
         }
     }
 
@@ -262,7 +278,6 @@ public class BossAbilityTests
         var state = BuildState(db, 2, boss, jungle, random, equipmentDeckCards: healingCards);
 
         DriveToCombatCycle(engine, state);
-        state.CrabActionsThisRound.Clear(); // isolate the regen tick from crab-attack resolution
         state.CurrentBossHp = 1;
 
         PlayOutCombatCycle(engine, state);
@@ -290,13 +305,12 @@ public class BossAbilityTests
         var state = BuildState(db, 3, boss, volcanic, random, equipmentDeckCards: weapons);
 
         DriveToCombatCycle(engine, state);
-        engine.DrawCrabAction(state);
-        if (state.PendingCrabActionTarget is not null)
+        while (state.Phase == GamePhase.BossAttack && state.PendingCrabAttacks.Count > 0)
         {
-            engine.ResolveCrabAction(state);
+            engine.ResolveNextCrabAttack(state);
         }
 
-        Assert.Equal(GamePhase.CombatCycle, state.Phase);
+        Assert.Equal(GamePhase.PlayerTurns, state.Phase);
         Assert.True(state.PendingEquipmentTurns.Count > 0);
 
         var player = state.PendingEquipmentTurns.Peek();
@@ -326,7 +340,7 @@ public class BossAbilityTests
         // first player, so this proves the ambush actually overrides the usual priority order.
         state.Players[1].Position = Position.Melee;
 
-        state.Phase = GamePhase.EndPhaseCrabAttacks;
+        state.Phase = GamePhase.BossAttack;
         state.PendingCrabAttacks.Clear();
         state.PendingCrabAttacks.Enqueue("Boss");
 
@@ -352,10 +366,9 @@ public class BossAbilityTests
         DriveToCombatCycle(engine, state);
         var startingMinionCount = state.CurrentMinions.Count;
 
-        engine.DrawCrabAction(state);
-        if (state.PendingCrabActionTarget is not null)
+        while (state.Phase == GamePhase.BossAttack && state.PendingCrabAttacks.Count > 0)
         {
-            engine.ResolveCrabAction(state);
+            engine.ResolveNextCrabAttack(state);
         }
 
         var player = state.PendingEquipmentTurns.Peek();

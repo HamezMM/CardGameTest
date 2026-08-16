@@ -12,7 +12,6 @@ public sealed class CardBrowserViewModel : ObservableObject
     public ICollectionView Characters { get; }
     public ICollectionView Bosses { get; }
     public ICollectionView Minions { get; }
-    public ICollectionView CrabActions { get; }
     public ICollectionView DamageCards { get; }
     public ICollectionView Equipment { get; }
     public ICollectionView Locations { get; }
@@ -34,7 +33,6 @@ public sealed class CardBrowserViewModel : ObservableObject
         Characters = MakeFilteredView(db.Characters);
         Bosses = MakeFilteredView(db.Bosses);
         Minions = MakeFilteredView(db.Minions);
-        CrabActions = MakeFilteredView(db.CrabActions);
         DamageCards = MakeFilteredView(db.DamageCards);
         Equipment = MakeFilteredView(db.Equipment);
         Locations = MakeFilteredView(db.Locations);
@@ -56,7 +54,6 @@ public sealed class CardBrowserViewModel : ObservableObject
         Characters.Refresh();
         Bosses.Refresh();
         Minions.Refresh();
-        CrabActions.Refresh();
         DamageCards.Refresh();
         Equipment.Refresh();
         Locations.Refresh();

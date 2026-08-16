@@ -29,7 +29,6 @@ public sealed class CsvCardLoader
             Characters = LoadCharacters(Path.Combine(directoryPath, "characters.csv")),
             Bosses = LoadBosses(Path.Combine(directoryPath, "crab_bosses.csv")),
             Minions = LoadMinions(Path.Combine(directoryPath, "crab_minions.csv")),
-            CrabActions = LoadCrabActions(Path.Combine(directoryPath, "crab_actions.csv")),
             DamageCards = LoadDamageCards(Path.Combine(directoryPath, "damage.csv")),
             Equipment = LoadEquipment(Path.Combine(directoryPath, "equipment.csv")),
             Locations = LoadLocations(Path.Combine(directoryPath, "locations.csv")),
@@ -68,14 +67,6 @@ public sealed class CsvCardLoader
             Name = row.Name,
         });
 
-    private List<CrabActionCard> LoadCrabActions(string path) =>
-        ReadRows<CrabActionCsvRow, CrabActionCard>(path, row => new CrabActionCard
-        {
-            Id = row.Id,
-            Name = row.Name,
-            EffectText = row.EffectText,
-        });
-
     private List<DamageCard> LoadDamageCards(string path) =>
         ReadRows<DamageCsvRow, DamageCard>(path, row => new DamageCard
         {
@@ -106,13 +97,6 @@ public sealed class CsvCardLoader
                 [3] = row.EquipmentDraw3p,
                 [4] = row.EquipmentDraw4p,
                 [5] = row.EquipmentDraw5p,
-            },
-            CrabActionCountByPlayerCount = new Dictionary<int, int>
-            {
-                [2] = row.CrabActionCount2p,
-                [3] = row.CrabActionCount3p,
-                [4] = row.CrabActionCount4p,
-                [5] = row.CrabActionCount5p,
             },
             MinionCountByPlayerCount = new Dictionary<int, int>
             {

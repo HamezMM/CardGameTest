@@ -13,11 +13,9 @@ public sealed class LocationCard
     public bool IsShuttle { get; init; }
 
     public required IReadOnlyDictionary<int, int> EquipmentDrawByPlayerCount { get; init; }
-    public required IReadOnlyDictionary<int, int> CrabActionCountByPlayerCount { get; init; }
     public required IReadOnlyDictionary<int, int> MinionCountByPlayerCount { get; init; }
 
     public int EquipmentDrawFor(int playerCount) => Lookup(EquipmentDrawByPlayerCount, playerCount);
-    public int CrabActionCountFor(int playerCount) => Lookup(CrabActionCountByPlayerCount, playerCount);
     public int MinionCountFor(int playerCount) => Lookup(MinionCountByPlayerCount, playerCount);
 
     private static int Lookup(IReadOnlyDictionary<int, int> table, int playerCount)

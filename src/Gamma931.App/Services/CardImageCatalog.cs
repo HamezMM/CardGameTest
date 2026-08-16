@@ -19,6 +19,5 @@ public static class CardImageCatalog
     public static string For(CrabMinionCard card) => $"{BasePath}minions/{card.Id}.png";
     public static string For(EquipmentCard card) => $"{BasePath}equipment/{card.Id}.png";
     public static string For(LocationCard card) => $"{BasePath}locations/{card.Id}.png";
-    public static string For(CrabActionCard card) => $"{BasePath}crab_actions/{card.Id}.png";
     public static string For(DamageCard card) => $"{BasePath}damage/{card.BodyLocation}.png";
 }
