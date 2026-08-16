@@ -164,19 +164,19 @@
                                 <Button Content="Reveal Location" Command="{Binding RevealLocationCommand}" Margin="0,0,6,6" Padding="8,4" />
                                 <Button Content="Draw Equipment" Command="{Binding DrawEquipmentCommand}" Margin="0,0,6,6" Padding="8,4" />
                                 <Button Content="Draw Boss" Command="{Binding DrawBossCommand}" Margin="0,0,6,6" Padding="8,4" />
-                                <Button Content="Set Aside Crab Actions" Command="{Binding SetAsideCrabActionsCommand}" Margin="0,0,6,6" Padding="8,4" />
                                 <Button Content="Draw Minions" Command="{Binding DrawMinionsCommand}" Margin="0,0,6,6" Padding="8,4" />
                                 <Button Content="Advance to Next Round" Command="{Binding AdvanceRoundCommand}" Margin="0,0,6,6" Padding="8,4" />
                             </WrapPanel>
 
+                            <!-- Every living crab acts each cycle: boss attacks, then each player takes an
+                                 equipment turn, then every living minion attacks — repeating until all crabs
+                                 or all players are dead (no crab action deck). -->
                             <TextBlock Text="Combat Cycle" FontWeight="Bold" Margin="0,0,0,4" />
-                            <Button Content="Draw Crab Action" Command="{Binding DrawCrabActionCommand}" HorizontalAlignment="Left" Margin="0,0,0,8" Padding="8,4" />
 
-                            <StackPanel Visibility="{Binding HasPendingCrabAction, Converter={StaticResource BoolToVis}}" Margin="0,0,0,10">
-                                <TextBlock Text="{Binding CrabActionText}" FontStyle="Italic" />
+                            <StackPanel Visibility="{Binding HasPendingCrabAttack, Converter={StaticResource BoolToVis}}" Margin="0,0,0,10">
                                 <TextBlock Text="{Binding PendingAttackText}" Foreground="DarkRed" Margin="0,2,0,6" />
                                 <WrapPanel>
-                                    <Button Content="Take the Hit" Command="{Binding TakeCrabHitCommand}" Margin="0,0,6,6" Padding="8,4" />
+                                    <Button Content="Take the Hit" Command="{Binding CrabAttackTakeHitCommand}" Margin="0,0,6,6" Padding="8,4" />
                                     <ItemsControl ItemsSource="{Binding BlockableCards}">
                                         <ItemsControl.ItemsPanel>
                                             <ItemsPanelTemplate>
@@ -186,7 +186,7 @@
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate DataType="{x:Type models:EquipmentCard}">
                                                 <Button Content="{Binding Name, StringFormat='Block with {0}'}"
-                                                        Command="{Binding DataContext.BlockCrabActionCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                        Command="{Binding DataContext.CrabAttackBlockCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                         CommandParameter="{Binding}"
                                                         Margin="0,0,6,6" Padding="8,4" />
                                             </DataTemplate>
@@ -195,7 +195,8 @@
                                 </WrapPanel>
                             </StackPanel>
 
-                            <TextBlock Text="{Binding CurrentTurnText}" FontWeight="Bold" Margin="0,4,0,4" />
+                            <TextBlock Text="{Binding CurrentTurnText}" FontWeight="Bold" Margin="0,4,0,4"
+                                       Visibility="{Binding IsPlayerTurnsPhase, Converter={StaticResource BoolToVis}}" />
                             <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Margin="0,0,0,10">
                                 <ItemsControl ItemsSource="{Binding CurrentHand}" ItemsPanel="{StaticResource CarouselPanel}">
                                     <ItemsControl.ItemTemplate>
@@ -312,38 +313,14 @@
                                 </ItemsControl>
                             </ScrollViewer>
 
-                            <TextBlock Text="End Phase Combat" FontWeight="Bold" Margin="0,10,0,4"
-                                       Visibility="{Binding IsEndPhaseDraw, Converter={StaticResource BoolToVis}}" />
-                            <WrapPanel Visibility="{Binding IsEndPhaseDraw, Converter={StaticResource BoolToVis}}" Margin="0,0,0,10">
-                                <Button Content="Draw &amp; Resolve (End Phase)" Command="{Binding EndPhaseDrawCommand}"
+                            <!-- Guaranteed action once a player's hand is empty (RULES.md "Weapons & Modifiers"):
+                                 swing the default melee weapon instead of playing a card. -->
+                            <WrapPanel Visibility="{Binding IsPlayerTurnsPhase, Converter={StaticResource BoolToVis}}" Margin="0,0,0,10">
+                                <Button Content="Swing Default Melee — Boss" Command="{Binding AttackMeleeBossCommand}"
                                         Padding="8,4" Margin="0,0,6,0" />
-                                <Button Content="Swing Default Melee — Boss" Command="{Binding EndPhaseAttackMeleeBossCommand}"
-                                        Padding="8,4" Margin="0,0,6,0" />
-                                <Button Content="Swing Default Melee — Minions" Command="{Binding EndPhaseAttackMeleeMinionsCommand}"
+                                <Button Content="Swing Default Melee — Minions" Command="{Binding AttackMeleeMinionsCommand}"
                                         Padding="8,4" />
                             </WrapPanel>
-
-                            <StackPanel Visibility="{Binding IsEndPhaseCrabAttacks, Converter={StaticResource BoolToVis}}">
-                                <TextBlock Text="All remaining crabs attack" FontWeight="Bold" Margin="0,0,0,4" />
-                                <WrapPanel>
-                                    <Button Content="Take the Hit" Command="{Binding CrabAttackTakeHitCommand}" Margin="0,0,6,6" Padding="8,4" />
-                                    <ItemsControl ItemsSource="{Binding BlockableCards}">
-                                        <ItemsControl.ItemsPanel>
-                                            <ItemsPanelTemplate>
-                                                <WrapPanel />
-                                            </ItemsPanelTemplate>
-                                        </ItemsControl.ItemsPanel>
-                                        <ItemsControl.ItemTemplate>
-                                            <DataTemplate DataType="{x:Type models:EquipmentCard}">
-                                                <Button Content="{Binding Name, StringFormat='Block with {0}'}"
-                                                        Command="{Binding DataContext.CrabAttackBlockCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                        CommandParameter="{Binding}"
-                                                        Margin="0,0,6,6" Padding="8,4" />
-                                            </DataTemplate>
-                                        </ItemsControl.ItemTemplate>
-                                    </ItemsControl>
-                                </WrapPanel>
-                            </StackPanel>
 
                         </StackPanel>
                     </ScrollViewer>

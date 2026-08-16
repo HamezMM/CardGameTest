@@ -14,10 +14,8 @@ public sealed class LocationCard
     public string FlavorText { get; init; } = string.Empty;
 
     public required IReadOnlyDictionary<int, int> EquipmentDrawByPlayerCount { get; init; }
-    public required IReadOnlyDictionary<int, int> CrabActionCountByPlayerCount { get; init; }
 
     public int EquipmentDrawFor(int playerCount) => Lookup(EquipmentDrawByPlayerCount, playerCount);
-    public int CrabActionCountFor(int playerCount) => Lookup(CrabActionCountByPlayerCount, playerCount);
 
     private static int Lookup(IReadOnlyDictionary<int, int> table, int playerCount)
     {

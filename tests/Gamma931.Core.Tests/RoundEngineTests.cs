@@ -103,15 +103,15 @@ public class RoundEngineTests
         var startingBossHp = state.CurrentBossHp;
         var startingMinionCount = state.CurrentMinions.Count;
 
-        engine.DrawCrabAction(state);
-        if (state.PendingCrabActionTarget is not null)
+        // Resolve the boss's own attack (unblocked) to reach the Player Turns step.
+        while (state.Phase == GamePhase.BossAttack && state.PendingCrabAttacks.Count > 0)
         {
-            engine.ResolveCrabAction(state);
+            engine.ResolveNextCrabAttack(state);
         }
 
-        if (state.Phase != GamePhase.CombatCycle || state.PendingEquipmentTurns.Count == 0)
+        if (state.Phase != GamePhase.PlayerTurns || state.PendingEquipmentTurns.Count == 0)
         {
-            return; // round already ended from the crab attack (small test decks) — nothing more to assert
+            return; // round already ended from the boss attack (small test decks) — nothing more to assert
         }
 
         var player = state.PendingEquipmentTurns.Peek();
@@ -128,26 +128,53 @@ public class RoundEngineTests
     }
 
     [Fact]
-    public void EndPhaseAttackWithDefaultMeleeWeapon_DealsBaseDamage_WithoutDrawingACard()
+    public void AttackWithDefaultMeleeWeapon_DealsBaseDamage_WithoutDrawingACard()
     {
         var db = LoadDb();
         var engine = new RoundEngine(new Random(3));
         var state = engine.StartNewGame(db, PlayerSetup(db, 2), DifficultyLevel.Normal);
 
         DriveToCombatCycle(engine, state);
-        engine.BeginEndPhaseCombat(state);
+        while (state.Phase == GamePhase.BossAttack && state.PendingCrabAttacks.Count > 0)
+        {
+            engine.ResolveNextCrabAttack(state);
+        }
+
+        Assert.Equal(GamePhase.PlayerTurns, state.Phase);
+        Assert.True(state.PendingEquipmentTurns.Count > 0);
 
         var startingBossHp = state.CurrentBossHp;
         var drawPileBefore = state.EquipmentDeck.DrawPileCount;
         var discardPileBefore = state.EquipmentDeck.DiscardPileCount;
         var player = state.PendingEquipmentTurns.Peek();
+        player.Hand.Clear(); // exercise the empty-hand fallback in isolation, regardless of the random equipment draw
 
-        engine.EndPhaseAttackWithDefaultMeleeWeapon(state, CombatTarget.Boss);
+        engine.AttackWithDefaultMeleeWeapon(state, CombatTarget.Boss);
 
         Assert.Equal(Position.Melee, player.Position);
         Assert.Equal(Math.Max(0, startingBossHp - 1), state.CurrentBossHp);
         Assert.Equal(drawPileBefore, state.EquipmentDeck.DrawPileCount);
         Assert.Equal(discardPileBefore, state.EquipmentDeck.DiscardPileCount);
+    }
+
+    [Fact]
+    public void AttackWithDefaultMeleeWeapon_Throws_WhenPlayerStillHasCardsInHand()
+    {
+        var db = LoadDb();
+        var engine = new RoundEngine(new Random(3));
+        var state = engine.StartNewGame(db, PlayerSetup(db, 2), DifficultyLevel.Normal);
+
+        DriveToCombatCycle(engine, state);
+        while (state.Phase == GamePhase.BossAttack && state.PendingCrabAttacks.Count > 0)
+        {
+            engine.ResolveNextCrabAttack(state);
+        }
+
+        Assert.Equal(GamePhase.PlayerTurns, state.Phase);
+        var player = state.PendingEquipmentTurns.Peek();
+        Assert.NotEmpty(player.Hand); // fresh hand from DrawEquipmentForAllPlayers
+
+        Assert.Throws<InvalidOperationException>(() => engine.AttackWithDefaultMeleeWeapon(state, CombatTarget.Boss));
     }
 
     [Fact]
@@ -169,7 +196,6 @@ public class RoundEngineTests
             EquipmentDeck = new Deck<EquipmentCard>(db.Equipment, new Random(5)),
             DamageDeck = new Deck<DamageCard>(db.DamageCards, new Random(5)),
             BossDeck = new Deck<CrabBossCard>(db.Bosses, new Random(5)),
-            CrabActionDeck = new Deck<CrabActionCard>(db.CrabActions, new Random(5)),
             CrabMinionDeck = smallMinionDeck,
             RemainingLocations = db.NonShuttleLocations.Take(1).ToList(),
             FirstPlayerIndex = 0,
@@ -180,16 +206,16 @@ public class RoundEngineTests
         engine.RevealNextLocation(state);
         engine.DrawEquipmentForAllPlayers(state);
         engine.DrawBoss(state);
-        engine.SetAsideCrabActions(state);
-        engine.DrawMinions(state); // drains the 1-card minion draw pile
+        engine.DrawMinions(state); // drains the 1-card minion draw pile; auto-starts the Boss Attack step
 
         Assert.Equal(0, state.CrabMinionDeck.DrawPileCount);
 
-        // Skip the crab-action attack entirely so only the weapon hit below affects state — this
-        // test is about the minion deck's reshuffle, not crab attack resolution.
-        state.CrabActionsThisRound.Clear();
-        engine.DrawCrabAction(state);
-        Assert.Null(state.PendingCrabActionTarget);
+        // Resolve the boss's own attack (unblocked) to reach the Player Turns step — this test is
+        // about the minion deck's reshuffle, not crab attack resolution.
+        while (state.Phase == GamePhase.BossAttack && state.PendingCrabAttacks.Count > 0)
+        {
+            engine.ResolveNextCrabAttack(state);
+        }
 
         // Guarantee whoever is up next has a melee modifier in hand, regardless of the random
         // equipment draw — every weapon card's DamageBonus is >= 1, so one hit (1 base + >= 1
@@ -223,12 +249,11 @@ public class RoundEngineTests
             EquipmentDeck = new Deck<EquipmentCard>(db.Equipment, new Random(1)),
             DamageDeck = new Deck<DamageCard>(db.DamageCards, new Random(1)),
             BossDeck = new Deck<CrabBossCard>(db.Bosses, new Random(1)),
-            CrabActionDeck = new Deck<CrabActionCard>(db.CrabActions, new Random(1)),
             CrabMinionDeck = new Deck<CrabMinionCard>(db.Minions, new Random(1)),
             RemainingLocations = db.NonShuttleLocations.Take(1).ToList(),
             FirstPlayerIndex = 0,
             RoundNumber = 1,
-            Phase = GamePhase.CombatCycle,
+            Phase = GamePhase.PlayerTurns,
         };
         state.PendingEquipmentTurns.Enqueue(healer);
         return state;
@@ -285,7 +310,6 @@ public class RoundEngineTests
         engine.RevealNextLocation(state);
         engine.DrawEquipmentForAllPlayers(state);
         engine.DrawBoss(state);
-        engine.SetAsideCrabActions(state);
-        engine.DrawMinions(state);
+        engine.DrawMinions(state); // ends at GamePhase.BossAttack — the boss always has full HP here
     }
 }

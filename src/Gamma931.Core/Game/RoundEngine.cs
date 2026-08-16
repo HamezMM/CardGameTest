@@ -9,6 +9,10 @@ namespace Gamma931.Core.Game;
 /// (reveal a location, draw equipment, play a card, resolve an attack...) so the WPF UI can
 /// present the round structure interactively instead of auto-simulating it.
 ///
+/// Combat has no crab action deck: every crab currently in play acts every cycle. Each combat
+/// cycle is Boss attacks -> each player takes an equipment turn -> every living minion attacks
+/// -> repeat, until all crabs or all players are dead (RULES.md "Combat Turn Order").
+///
 /// Several numeric values (weapon damage, heal amounts) are not pinned down anywhere in
 /// RULES.md/ROSTER.md yet — those are marked below and use clearly-placeholder defaults meant to
 /// be tuned once real playtesting starts. All 10 crab_bosses.csv abilities are wired up (their
@@ -87,7 +91,6 @@ public sealed class RoundEngine
             EquipmentDeck = new Deck<EquipmentCard>(db.Equipment, _random),
             DamageDeck = new Deck<DamageCard>(db.DamageCards, _random),
             BossDeck = new Deck<CrabBossCard>(db.Bosses, _random),
-            CrabActionDeck = new Deck<CrabActionCard>(db.CrabActions, _random),
             CrabMinionDeck = new Deck<CrabMinionCard>(db.Minions, _random),
             RemainingLocations = chosenLocations,
             FirstPlayerIndex = 0,
@@ -180,27 +183,10 @@ public sealed class RoundEngine
             }
         }
 
-        state.Phase = GamePhase.CrabActionSetAside;
-    }
-
-    /// <summary>Round Structure step 4: set aside this round's face-down crab action pile.</summary>
-    public void SetAsideCrabActions(GameState state)
-    {
-        RequirePhase(state, GamePhase.CrabActionSetAside);
-        var location = RequireCurrentLocation(state);
-        var count = location.CrabActionCountFor(state.Players.Count);
-
-        state.CrabActionsThisRound.Clear();
-        foreach (var card in state.CrabActionDeck.Draw(count))
-        {
-            state.CrabActionsThisRound.Enqueue(card);
-        }
-
-        state.LogEvent($"{count} crab action card(s) set aside for this round.");
         state.Phase = GamePhase.MinionReveal;
     }
 
-    /// <summary>Round Structure step 5: draw the boss's minions (each a flat 1 HP).</summary>
+    /// <summary>Round Structure step 4: draw the boss's minions (each a flat 1 HP).</summary>
     public void DrawMinions(GameState state)
     {
         RequirePhase(state, GamePhase.MinionReveal);
@@ -218,101 +204,76 @@ public sealed class RoundEngine
         state.CurrentMinions.AddRange(state.CrabMinionDeck.Draw(count));
 
         state.LogEvent($"{count} minion(s) join the fight: {string.Join(", ", state.CurrentMinions.Select(m => m.Name))}.");
-        state.Phase = GamePhase.CombatCycle;
+        BeginBossAttackStep(state);
     }
 
     /// <summary>
-    /// Combat Turn Order step 1: draw and reveal a crab action card. Resolving it is what makes
-    /// the crabs act each cycle, so this also selects an attack target per the Crab Attack Rules
-    /// priority — call <see cref="ResolveCrabAction"/> next to let the target block or take the
-    /// hit before equipment turns are queued.
+    /// Computes (once) and caches the target for the attacker at the front of
+    /// <see cref="GameState.PendingCrabAttacks"/>, so the UI can show which player's protection
+    /// cards are blockable before the attack resolves. Calling this repeatedly for the same
+    /// attacker returns the same cached target rather than re-rolling Wreckstalker's ambush
+    /// chance — <see cref="ResolveNextCrabAttack"/> relies on that to resolve against exactly the
+    /// player the UI previewed.
     /// </summary>
-    public void DrawCrabAction(GameState state)
+    public Player PeekNextCrabAttackTarget(GameState state)
     {
-        RequirePhase(state, GamePhase.CombatCycle);
-
-        state.CurrentCrabAction = state.CrabActionsThisRound.Count > 0
-            ? state.CrabActionsThisRound.Dequeue()
-            : null;
-
-        if (state.CurrentCrabAction is { } action)
+        if (state.PendingCrabAttackTarget is { } cached)
         {
-            var attacker = SelectCrabAttacker(state);
-            state.PendingCrabActionAttacker = attacker;
-            var target = SelectAttackTargetWithAmbush(state, attacker);
-            state.PendingCrabActionTarget = target;
-            state.LogEvent($"Crab action: {action.Name} — {action.EffectText} (targeting {target.Name}).");
+            return cached;
+        }
+
+        if (state.PendingCrabAttacks.Count == 0)
+        {
+            throw new InvalidOperationException("No crab attacks left in this wave.");
+        }
+
+        var target = SelectAttackTargetWithAmbush(state, state.PendingCrabAttacks.Peek());
+        state.PendingCrabAttackTarget = target;
+        return target;
+    }
+
+    /// <summary>Combat Turn Order: resolves the next queued crab attack (the boss during the Boss
+    /// Attack step, or a minion during the Minion Attacks step). RULES.md: "Crab attacks can be
+    /// blocked by playing a protection equipment card as a response, out of turn." Pass the
+    /// player's chosen Protection card to block, or null to take the hit.</summary>
+    public void ResolveNextCrabAttack(GameState state, EquipmentCard? blockingCard = null)
+    {
+        if (state.Phase is not (GamePhase.BossAttack or GamePhase.MinionAttacks))
+        {
+            throw new InvalidOperationException(
+                $"Expected phase {GamePhase.BossAttack} or {GamePhase.MinionAttacks} but game is in {state.Phase}.");
+        }
+
+        if (state.PendingCrabAttacks.Count == 0)
+        {
+            throw new InvalidOperationException("No crab attacks left in this wave.");
+        }
+
+        var target = PeekNextCrabAttackTarget(state);
+        var attacker = state.PendingCrabAttacks.Dequeue();
+        state.PendingCrabAttackTarget = null;
+        ResolveCrabAttack(
+            state, target, blockingCard,
+            attacker == "Boss" ? $"{state.CurrentBoss?.Name ?? "The boss"}" : "A minion",
+            attackerIsMinion: attacker == "Minion");
+
+        if (CheckRoundEnd(state))
+        {
+            return;
+        }
+
+        if (state.PendingCrabAttacks.Count > 0)
+        {
+            return;
+        }
+
+        if (state.Phase == GamePhase.BossAttack)
+        {
+            BeginPlayerTurns(state);
         }
         else
         {
-            state.LogEvent("No crab action cards remain for this round — no attack this cycle.");
-            QueueEquipmentTurnsFromHands(state);
-            if (state.PendingEquipmentTurns.Count == 0)
-            {
-                TransitionWhenNoOneCanPlay(state);
-            }
-        }
-    }
-
-    /// <summary>Resolves the attack queued by <see cref="DrawCrabAction"/>, then queues equipment turns.</summary>
-    public void ResolveCrabAction(GameState state, EquipmentCard? blockingCard = null)
-    {
-        RequirePhase(state, GamePhase.CombatCycle);
-        var target = state.PendingCrabActionTarget
-            ?? throw new InvalidOperationException("No crab action attack is awaiting resolution.");
-
-        var attackerIsMinion = state.PendingCrabActionAttacker == "Minion";
-        ResolveCrabAttack(state, target, blockingCard, state.CurrentCrabAction?.Name ?? "The crabs", attackerIsMinion);
-        state.PendingCrabActionTarget = null;
-        state.PendingCrabActionAttacker = null;
-
-        if (CheckRoundEnd(state))
-        {
-            return;
-        }
-
-        QueueEquipmentTurnsFromHands(state);
-        if (state.PendingEquipmentTurns.Count == 0)
-        {
-            TransitionWhenNoOneCanPlay(state);
-        }
-    }
-
-    /// <summary>Combat Turn Order steps 2-3: the next queued player plays one equipment card from hand.</summary>
-    public void PlayEquipmentFromHand(GameState state, EquipmentCard card, CombatTarget? target = null, Player? healTarget = null)
-    {
-        RequirePhase(state, GamePhase.CombatCycle);
-        if (state.PendingCrabActionTarget is not null)
-        {
-            throw new InvalidOperationException("Resolve the pending crab action attack (ResolveCrabAction) before playing equipment.");
-        }
-
-        var player = RequireNextEquipmentPlayer(state);
-
-        if (card.EquipmentType == EquipmentType.Protection)
-        {
-            throw new InvalidOperationException(
-                $"{card.Name} is a Protection card — it's held and played as an out-of-turn response " +
-                "to a crab attack (see ResolveCrabAttack), not during the normal equipment turn.");
-        }
-
-        if (!player.Hand.Remove(card))
-        {
-            throw new InvalidOperationException($"{player.Name} does not have {card.Name} in hand.");
-        }
-
-        state.PendingEquipmentTurns.Dequeue();
-        ResolvePlayedEquipment(state, player, card, target, healTarget);
-        state.EquipmentDeck.Discard(card);
-
-        if (CheckRoundEnd(state))
-        {
-            return;
-        }
-
-        if (state.PendingEquipmentTurns.Count == 0)
-        {
-            TransitionWhenNoOneCanPlay(state);
+            EndCombatCycle(state);
         }
     }
 
@@ -395,57 +356,27 @@ public sealed class RoundEngine
             : alive[0];
     }
 
-    /// <summary>Entered when hands run dry with crabs still alive. Starts the End Phase draw-from-deck pass.</summary>
-    public void BeginEndPhaseCombat(GameState state)
+    /// <summary>Combat Turn Order: the next queued player plays one equipment card from hand.</summary>
+    public void PlayEquipmentFromHand(GameState state, EquipmentCard card, CombatTarget? target = null, Player? healTarget = null)
     {
-        state.Phase = GamePhase.EndPhaseCombat;
+        RequirePhase(state, GamePhase.PlayerTurns);
 
-        // Bogfather: heals 1 HP once per round, right before End Phase Combat begins. This method
-        // re-runs every End Phase iteration (RULES.md's "repeat until the round is over"), so the
-        // once-per-round latch matters — without it this would heal every iteration.
-        if (!state.BossAbilityUsedThisRound && CurrentBossAbilityActive(state, BogfatherName) && state.CurrentBossHp > 0)
-        {
-            var maxHp = state.CurrentBoss!.HpFor(state.Players.Count);
-            state.CurrentBossHp = Math.Min(maxHp, state.CurrentBossHp + BogfatherHealAmount);
-            state.BossAbilityUsedThisRound = true;
-            state.LogEvent($"Bogfather passively heals {BogfatherHealAmount} HP (now {state.CurrentBossHp}/{maxHp}).");
-        }
-
-        state.LogEvent("Equipment hands exhausted — entering End Phase Combat.");
-        state.PendingEquipmentTurns.Clear();
-        foreach (var player in PlayersInTurnOrderFrom(state, state.FirstPlayerIndex).Where(p => p.IsAlive))
-        {
-            state.PendingEquipmentTurns.Enqueue(player);
-        }
-
-        if (state.PendingEquipmentTurns.Count == 0)
-        {
-            BeginCrabAttackWave(state);
-        }
-    }
-
-    /// <summary>End Phase Combat step 2: the next queued player draws and immediately resolves the top equipment card.</summary>
-    public void EndPhaseDrawAndResolve(GameState state, CombatTarget? target = null, Player? healTarget = null)
-    {
-        RequirePhase(state, GamePhase.EndPhaseCombat);
-        if (state.PendingEquipmentTurns.Count == 0)
-        {
-            throw new InvalidOperationException("No players left to draw this End Phase pass.");
-        }
-
-        var player = state.PendingEquipmentTurns.Dequeue();
-        var card = state.EquipmentDeck.Draw();
-        state.LogEvent($"{player.Name} draws {card.Name} in End Phase Combat.");
+        var player = RequireNextEquipmentPlayer(state);
 
         if (card.EquipmentType == EquipmentType.Protection)
         {
-            state.LogEvent($"{card.Name} is a Protection card with no drawn-and-resolved effect; it is discarded.");
-        }
-        else
-        {
-            ResolvePlayedEquipment(state, player, card, target, healTarget);
+            throw new InvalidOperationException(
+                $"{card.Name} is a Protection card — it's held and played as an out-of-turn response " +
+                "to a crab attack (see ResolveCrabAttack), not during the normal equipment turn.");
         }
 
+        if (!player.Hand.Remove(card))
+        {
+            throw new InvalidOperationException($"{player.Name} does not have {card.Name} in hand.");
+        }
+
+        state.PendingEquipmentTurns.Dequeue();
+        ResolvePlayedEquipment(state, player, card, target, healTarget);
         state.EquipmentDeck.Discard(card);
 
         if (CheckRoundEnd(state))
@@ -455,59 +386,40 @@ public sealed class RoundEngine
 
         if (state.PendingEquipmentTurns.Count == 0)
         {
-            BeginCrabAttackWave(state);
+            BeginMinionAttackStep(state);
         }
     }
 
-    /// <summary>Computes (once) and caches the target for the attacker at the front of
-    /// <see cref="GameState.PendingCrabAttacks"/>, so the UI can show which player's protection
-    /// cards are blockable before the attack resolves. Calling this repeatedly for the same
-    /// attacker returns the same cached target rather than re-rolling Wreckstalker's ambush
-    /// chance — <see cref="ResolveNextCrabAttack"/> relies on that to resolve against exactly the
-    /// player the UI previewed.</summary>
-    public Player PeekNextCrabAttackTarget(GameState state)
+    /// <summary>
+    /// RULES.md "Weapons & Modifiers": lets a player swing their default melee weapon for its flat
+    /// <see cref="BaseWeaponDamage"/> with no card played — the guaranteed action a player with an
+    /// empty hand still gets during their equipment turn, instead of being skipped.
+    /// </summary>
+    public void AttackWithDefaultMeleeWeapon(GameState state, CombatTarget target = CombatTarget.Boss)
     {
-        if (state.PendingCrabAttackTarget is { } cached)
+        RequirePhase(state, GamePhase.PlayerTurns);
+
+        var player = RequireNextEquipmentPlayer(state);
+        if (player.Hand.Count > 0)
         {
-            return cached;
+            throw new InvalidOperationException(
+                $"{player.Name} still has equipment cards in hand and must play one (see PlayEquipmentFromHand) " +
+                "instead of swinging their default weapon.");
         }
 
-        if (state.PendingCrabAttacks.Count == 0)
-        {
-            throw new InvalidOperationException("No crab attacks left in this wave.");
-        }
-
-        var target = SelectAttackTargetWithAmbush(state, state.PendingCrabAttacks.Peek());
-        state.PendingCrabAttackTarget = target;
-        return target;
-    }
-
-    /// <summary>End Phase Combat step 3: the next queued crab (boss or a minion) attacks.</summary>
-    public void ResolveNextCrabAttack(GameState state, EquipmentCard? blockingCard = null)
-    {
-        RequirePhase(state, GamePhase.EndPhaseCrabAttacks);
-        if (state.PendingCrabAttacks.Count == 0)
-        {
-            throw new InvalidOperationException("No crab attacks left in this wave.");
-        }
-
-        var target = PeekNextCrabAttackTarget(state);
-        var attacker = state.PendingCrabAttacks.Dequeue();
-        state.PendingCrabAttackTarget = null;
-        ResolveCrabAttack(
-            state, target, blockingCard,
-            attacker == "Boss" ? $"{state.CurrentBoss?.Name ?? "The boss"}" : "A minion",
-            attackerIsMinion: attacker == "Minion");
+        state.PendingEquipmentTurns.Dequeue();
+        player.Position = Position.Melee;
+        state.LogEvent($"{player.Name} swings their default melee weapon (no card left to play).");
+        ApplyWeaponHit(state, player, BaseWeaponDamage, "their default melee weapon", target);
 
         if (CheckRoundEnd(state))
         {
             return;
         }
 
-        if (state.PendingCrabAttacks.Count == 0)
+        if (state.PendingEquipmentTurns.Count == 0)
         {
-            // RULES.md End Phase Combat step 4: repeat until the round is over.
-            BeginEndPhaseCombat(state);
+            BeginMinionAttackStep(state);
         }
     }
 
@@ -528,7 +440,6 @@ public sealed class RoundEngine
         state.CurrentBoss = null;
         state.CurrentBossHp = 0;
         state.CurrentMinions.Clear();
-        state.CurrentCrabAction = null;
 
         state.FirstPlayerIndex = (state.FirstPlayerIndex + 1) % state.Players.Count;
         state.Phase = GamePhase.LocationReveal;
@@ -536,6 +447,91 @@ public sealed class RoundEngine
     }
 
     // ---- internals ----
+
+    /// <summary>Combat Turn Order step 1: the boss attacks, if still alive. Skips straight to
+    /// Player Turns when the boss is already dead (killed in a previous cycle, with minions still
+    /// alive to fight).</summary>
+    private void BeginBossAttackStep(GameState state)
+    {
+        state.Phase = GamePhase.BossAttack;
+        state.PendingCrabAttacks.Clear();
+        state.PendingCrabAttackTarget = null;
+
+        if (state.CurrentBossHp > 0)
+        {
+            state.PendingCrabAttacks.Enqueue("Boss");
+            state.LogEvent($"{state.CurrentBoss?.Name ?? "The boss"} attacks.");
+        }
+        else
+        {
+            BeginPlayerTurns(state);
+        }
+    }
+
+    /// <summary>Combat Turn Order step 2: every living player takes an equipment turn, in table
+    /// order starting from the round's first player.</summary>
+    private void BeginPlayerTurns(GameState state)
+    {
+        // Bogfather: heals 1 HP once per round, right before the crew's first turn of combat.
+        if (!state.BossAbilityUsedThisRound && CurrentBossAbilityActive(state, BogfatherName) && state.CurrentBossHp > 0)
+        {
+            var maxHp = state.CurrentBoss!.HpFor(state.Players.Count);
+            state.CurrentBossHp = Math.Min(maxHp, state.CurrentBossHp + BogfatherHealAmount);
+            state.BossAbilityUsedThisRound = true;
+            state.LogEvent($"Bogfather passively heals {BogfatherHealAmount} HP (now {state.CurrentBossHp}/{maxHp}).");
+        }
+
+        state.Phase = GamePhase.PlayerTurns;
+        state.PendingEquipmentTurns.Clear();
+        foreach (var player in PlayersInTurnOrderFrom(state, state.FirstPlayerIndex).Where(p => p.IsAlive))
+        {
+            state.PendingEquipmentTurns.Enqueue(player);
+        }
+
+        if (state.PendingEquipmentTurns.Count == 0)
+        {
+            BeginMinionAttackStep(state);
+        }
+    }
+
+    /// <summary>Combat Turn Order step 3: every living minion attacks.</summary>
+    private void BeginMinionAttackStep(GameState state)
+    {
+        state.Phase = GamePhase.MinionAttacks;
+        state.PendingCrabAttacks.Clear();
+        state.PendingCrabAttackTarget = null;
+
+        for (var i = 0; i < state.AliveMinionCount; i++)
+        {
+            state.PendingCrabAttacks.Enqueue("Minion");
+        }
+
+        if (state.PendingCrabAttacks.Count > 0)
+        {
+            state.LogEvent("All minions attack.");
+        }
+        else
+        {
+            EndCombatCycle(state);
+        }
+    }
+
+    /// <summary>Called exactly once at the true end of a combat cycle (after that cycle's minion
+    /// attacks, or immediately if no minions were alive to attack) — mirrors
+    /// tools/boss_ability_simulation.py's end_of_cycle_regen(), which runs after that cycle's crab
+    /// attacks and equipment turns rather than before them. Loops back into the next cycle's Boss
+    /// Attack step unless the round is over.</summary>
+    private void EndCombatCycle(GameState state)
+    {
+        ApplyVinewardenCycleRegen(state);
+
+        if (CheckRoundEnd(state))
+        {
+            return;
+        }
+
+        BeginBossAttackStep(state);
+    }
 
     private void ResolvePlayedEquipment(GameState state, Player player, EquipmentCard card, CombatTarget? target, Player? healTarget)
     {
@@ -564,36 +560,6 @@ public sealed class RoundEngine
         // played Melee/Ranged card is a modifier/ammo that adds its DamageBonus on top.
         var hits = BaseWeaponDamage + Math.Max(0, card.DamageBonus);
         ApplyWeaponHit(state, player, hits, card.Name, target);
-    }
-
-    /// <summary>
-    /// RULES.md "Weapons & Modifiers" / End Phase Combat: lets a player swing their default
-    /// melee weapon for its flat <see cref="BaseWeaponDamage"/> with no card played or drawn —
-    /// the guaranteed fallback action End Phase Combat now offers instead of only drawing a
-    /// random top-of-deck equipment card.
-    /// </summary>
-    public void EndPhaseAttackWithDefaultMeleeWeapon(GameState state, CombatTarget target = CombatTarget.Boss)
-    {
-        RequirePhase(state, GamePhase.EndPhaseCombat);
-        if (state.PendingEquipmentTurns.Count == 0)
-        {
-            throw new InvalidOperationException("No players left to act this End Phase pass.");
-        }
-
-        var player = state.PendingEquipmentTurns.Dequeue();
-        player.Position = Position.Melee;
-        state.LogEvent($"{player.Name} swings their default melee weapon (no card drawn).");
-        ApplyWeaponHit(state, player, BaseWeaponDamage, "their default melee weapon", target);
-
-        if (CheckRoundEnd(state))
-        {
-            return;
-        }
-
-        if (state.PendingEquipmentTurns.Count == 0)
-        {
-            BeginCrabAttackWave(state);
-        }
     }
 
     private void ApplyWeaponHit(GameState state, Player player, int hits, string weaponName, CombatTarget target)
@@ -678,34 +644,6 @@ public sealed class RoundEngine
         state.LogEvent($"{player.Name} plays {card.Name}, healing {target.Name} for {amount} HP (now {target.CurrentHp}/{Player.MaxHp}).");
     }
 
-    private void QueueEquipmentTurnsFromHands(GameState state)
-    {
-        state.PendingEquipmentTurns.Clear();
-        foreach (var player in PlayersInTurnOrderFrom(state, state.FirstPlayerIndex))
-        {
-            if (player.IsAlive && player.Hand.Count > 0)
-            {
-                state.PendingEquipmentTurns.Enqueue(player);
-            }
-        }
-    }
-
-    /// <summary>Called exactly once whenever a combat cycle's equipment turns have all been
-    /// resolved (immediately, if nobody had a card to play; otherwise after the last one is
-    /// played) — i.e. at the true end of the cycle, mirroring
-    /// tools/boss_ability_simulation.py's end_of_cycle_regen(), which runs after that cycle's
-    /// crab attack and equipment turns rather than before them.</summary>
-    private void TransitionWhenNoOneCanPlay(GameState state)
-    {
-        ApplyVinewardenCycleRegen(state);
-
-        var anyoneStillHasCards = state.Players.Any(p => p.IsAlive && p.Hand.Count > 0);
-        if (!anyoneStillHasCards && state.AnyCrabsAlive)
-        {
-            BeginEndPhaseCombat(state);
-        }
-    }
-
     /// <summary>Vinewarden: regenerates 1 HP at the end of each of the first 2 combat cycles it
     /// survives per round (capped — see BALANCE_NOTES.md, an uncapped per-cycle regen was
     /// wildly overtuned).</summary>
@@ -719,32 +657,6 @@ public sealed class RoundEngine
             state.CurrentBossHp = Math.Min(maxHp, state.CurrentBossHp + VinewardenRegenPerTick);
             state.BossAbilityTicksThisRound++;
             state.LogEvent($"Vinewarden regrows {VinewardenRegenPerTick} HP (now {state.CurrentBossHp}/{maxHp}).");
-        }
-    }
-
-    private void BeginCrabAttackWave(GameState state)
-    {
-        state.Phase = GamePhase.EndPhaseCrabAttacks;
-        state.PendingCrabAttacks.Clear();
-        state.PendingCrabAttackTarget = null;
-
-        if (state.CurrentBossHp > 0)
-        {
-            state.PendingCrabAttacks.Enqueue("Boss");
-        }
-
-        for (var i = 0; i < state.AliveMinionCount; i++)
-        {
-            state.PendingCrabAttacks.Enqueue("Minion");
-        }
-
-        if (state.PendingCrabAttacks.Count == 0)
-        {
-            CheckRoundEnd(state);
-        }
-        else
-        {
-            state.LogEvent("All remaining crabs attack.");
         }
     }
 
@@ -797,23 +709,6 @@ public sealed class RoundEngine
         }
 
         return boss.IsActiveAt(state.CurrentLocation?.Biome ?? string.Empty);
-    }
-
-    /// <summary>Picks which crab (the boss or a minion) is making the next attack, weighted by how
-    /// many of each are alive — mirrors tools/boss_ability_simulation.py's crab_pool selection so
-    /// attacker-specific abilities (Sandreaver on minions, Wreckstalker on the boss) fire at the
-    /// tuned rate during the main combat cycle, not just End Phase Combat.</summary>
-    private string SelectCrabAttacker(GameState state)
-    {
-        var minionCount = state.AliveMinionCount;
-        var bossAlive = state.CurrentBossHp > 0;
-        if (!bossAlive && minionCount == 0)
-        {
-            throw new InvalidOperationException("No crabs remain to attack.");
-        }
-
-        var bossWeight = bossAlive ? 1 : 0;
-        return _random.Next(bossWeight + minionCount) < bossWeight ? "Boss" : "Minion";
     }
 
     /// <summary>Normal Crab Attack Rules target selection, except Wreckstalker's own attacks have

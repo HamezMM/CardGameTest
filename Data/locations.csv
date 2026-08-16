@@ -1,9 +1,9 @@
-Id,Name,Biome,IsShuttle,FlavorText,EquipmentDraw2p,EquipmentDraw3p,EquipmentDraw4p,EquipmentDraw5p,CrabActionCount2p,CrabActionCount3p,CrabActionCount4p,CrabActionCount5p
-LOC-01,Dune Wastes,Desert,false,"Endless sand under a sky the wrong color. Something out there moves under the dunes, and it's already found you.",4,3,3,2,4,5,6,7
-LOC-02,Rot Marsh,Swamp,false,"The mud never dries and nothing here rots all the way. Every step forward is a step something else can smell.",4,3,3,2,4,5,6,7
-LOC-03,Frozen Reach,Ice/Tundra,false,"Wind-scoured ice stretches to the horizon. The cold isn't the only thing hunting you out here.",4,3,3,2,4,5,6,7
-LOC-04,Overgrown Canopy,Jungle,false,"Vines swallow whatever crashes here within a season. The canopy is thick enough to hide anything that wants to stay hidden.",4,3,3,2,4,5,6,7
-LOC-05,Ashen Caldera,Volcanic/Caves,false,"Heat rises off cracked rock in visible waves. Whatever nests this close to the caldera doesn't fear fire — it uses it.",4,3,3,2,4,5,6,7
-LOC-06,Derelict Hull,Ruins/Wreckage,false,"A ship that crashed long before yours did, picked clean and re-inhabited. The wreckage remembers every crew that didn't make it out.",4,3,3,2,4,5,6,7
-LOC-07,Shallow Reef,Coastal/Reef,false,"Tide pools glitter over a reef that never goes fully quiet. Low water means nowhere left to hide from what's underneath.",4,3,3,2,4,5,6,7
-LOC-08,Shuttle,,true,"Scorched but intact, exactly where you left it. No fight left here — just the walk up the ramp.",0,0,0,0,0,0,0,0
+Id,Name,Biome,IsShuttle,FlavorText,EquipmentDraw2p,EquipmentDraw3p,EquipmentDraw4p,EquipmentDraw5p
+LOC-01,Dune Wastes,Desert,false,"Endless sand under a sky the wrong color. Something out there moves under the dunes, and it's already found you.",4,3,3,2
+LOC-02,Rot Marsh,Swamp,false,"The mud never dries and nothing here rots all the way. Every step forward is a step something else can smell.",4,3,3,2
+LOC-03,Frozen Reach,Ice/Tundra,false,"Wind-scoured ice stretches to the horizon. The cold isn't the only thing hunting you out here.",4,3,3,2
+LOC-04,Overgrown Canopy,Jungle,false,"Vines swallow whatever crashes here within a season. The canopy is thick enough to hide anything that wants to stay hidden.",4,3,3,2
+LOC-05,Ashen Caldera,Volcanic/Caves,false,"Heat rises off cracked rock in visible waves. Whatever nests this close to the caldera doesn't fear fire — it uses it.",4,3,3,2
+LOC-06,Derelict Hull,Ruins/Wreckage,false,"A ship that crashed long before yours did, picked clean and re-inhabited. The wreckage remembers every crew that didn't make it out.",4,3,3,2
+LOC-07,Shallow Reef,Coastal/Reef,false,"Tide pools glitter over a reef that never goes fully quiet. Low water means nowhere left to hide from what's underneath.",4,3,3,2
+LOC-08,Shuttle,,true,"Scorched but intact, exactly where you left it. No fight left here — just the walk up the ramp.",0,0,0,0

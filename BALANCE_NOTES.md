@@ -12,6 +12,18 @@ themselves were carried over unchanged as a starting point, not re-solved per-bo
 is now per-player-count too (`HpXp`), scaling +1 HP per player above 2p (Ironshell keeps its
 +2 HP offset at every player count) — a placeholder scaling, not simulated.
 
+**`[STALE]`** Separately, this entire pass (and `tools/balance_simulation.py` /
+`tools/balance_final.py` / `tools/boss_ability_simulation.py`) was run against
+the old crab-action-deck combat cadence — one random crab attacking per drawn
+crab action card. RULES.md's Combat Turn Order no longer has a crab action
+deck: the boss attacks every cycle, then every living minion also attacks
+every cycle (not just one random crab). That is materially more crab-attack
+volume per round than these simulations assumed, so the tuned minion-count
+values and win-rate numbers below should be treated as a starting point only,
+not a validated target, until the simulator is updated to model "boss attacks,
+then players act, then every minion attacks" (and the now-per-boss minion
+counts) and re-run.
+
 ## Goal
 
 RULES.md leaves per-location minion counts as an open numbers-balance question

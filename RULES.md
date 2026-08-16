@@ -4,8 +4,12 @@ Status: DRAFT — contains open design questions, marked `[OPEN]`. Not final.
 
 ## Decisions Log
 - Damage model: **shared 6HP pool** (not per-limb). Body location just sets hit cost.
-- Combat cycle **loops**: draw crab action → all players play equipment → repeat, until all
-  crabs or all players are dead, or equipment runs out (then End Phase).
+- **No crab action deck.** Every crab in play acts every cycle instead of a drawn card
+  determining which one attacks. Combat cycle **loops**: the boss attacks → each player takes
+  an equipment turn (playing a card, or swinging their default weapon once their hand is empty
+  — see "Weapons & Modifiers") → every living minion attacks → repeat, until all crabs or all
+  players are dead. There is no separate End Phase sudden-death stage — the cycle itself never
+  runs out of actions, since a player with an empty hand still swings their default weapon.
 - Melee/range **position is determined by equipment played** (playing a melee weapon puts you
   in melee position, a ranged weapon puts you in range position) — dynamic, not fixed per
   character or chosen as a formation.
@@ -57,7 +61,7 @@ is revealed — there is no combat there.
 2. Set the shuttle location face up in play. Choose 5 other location cards, shuffle, and
    place face down on top of the shuttle location — this is the location deck.
 3. Shuffle the following into their own separate face-down decks: equipment, damage,
-   crab boss, crab action, crab (minion).
+   crab boss, crab (minion). There is no crab action deck — see Combat Turn Order.
 4. **Confirmed**: the location deck is always exactly 5 non-shuttle locations, regardless of
    player count. Difficulty instead scales via boss minion count (see Round Structure) and the
    per-player-count numbers printed on each location card.
@@ -68,7 +72,7 @@ is revealed — there is no combat there.
 
 1. Reveal the top card of the location deck; leave it face up on top of the deck. It shows:
    - Number of equipment cards each player draws
-   - Number of crab action cards set aside for the round
+   - Number of minions the boss spawns, per player count
    - `[NEW]` These numbers vary by player count (2/3/4/5) printed on the same card, so one
      location deck serves all player counts — no separate card sets needed.
 2. Each player draws the shown number of equipment cards.
@@ -79,8 +83,7 @@ is revealed — there is no combat there.
      boss deck per biome).
    - Scope for first playtest build: **10 total boss cards** (3 universal, 7 biome-specific),
      drafted in `ROSTER.md`. `[OPEN]` Full ability text still needs to be designed.
-4. Set aside the shown number of crab action cards, face down — drawn down through combat.
-5. Draw the top card of the crab deck and put it in play as the boss's minion(s).
+4. Draw the top card of the crab deck and put it in play as the boss's minion(s).
    - `[NEW]` Minimum of 1 crab minion per location so every location can support a boss draw.
    - Every additional minion crab added at that location (e.g. via boss ability) is a **flat
      1 HP** creature with no special abilities — any hit kills one. Only the boss carries
@@ -89,12 +92,20 @@ is revealed — there is no combat there.
      keeping the fixed 5-location run appropriately challenging for 2 vs. 5 players.
 
 ### Combat Turn Order
-Repeats each cycle until the round ends:
-1. Draw and resolve a crab action card.
-2. First player plays an equipment card.
-3. Subsequent players, clockwise from first player, each play an equipment card.
-4. **Confirmed**: this whole 4-step cycle repeats (draw new crab action, all players play
-   equipment again) until the round-end condition is hit — not just a single pass.
+
+**`[NEW]` No crab action deck.** Every crab currently in play acts every cycle — there is no
+drawn card that decides which single crab attacks. Repeats each cycle until the round ends:
+1. The boss attacks, if it's still alive (see Crab Attack Rules for targeting/damage). Skipped
+   if the boss has already been killed but minions are still alive to fight.
+2. Each player, clockwise from the round's first player, takes their equipment turn: play one
+   equipment card from hand, **or**, once their hand is empty, swing their **default melee
+   weapon** for its flat 1 HP instead — a player is never skipped for running out of cards.
+3. Every minion still alive attacks (see Crab Attack Rules) — one attack each, not just one
+   crab total.
+4. **Confirmed**: this whole cycle repeats (boss attacks → players act → minions attack) until
+   the round-end condition is hit, not just a single pass. Because a player's equipment turn
+   always has a guaranteed action (a card, or the default weapon), the cycle never stalls
+   waiting on a deck to refill — there is no separate sudden-death stage.
 
 **`[NEW]` Playing a card is always the turn action; only a weapon modifier/ammo card also
 attacks.** A player plays exactly one equipment card on their turn, same as before. If it's a
@@ -104,7 +115,6 @@ Healing or Protection card, that card's own effect is the whole turn; no attack 
 cycle.
 
 A round ends when either all crabs (boss + minions) or all players are dead.
-If crabs remain after all equipment cards are exhausted for the round, move to **End Phase Combat**.
 Once the round ends, remove the revealed location card and reveal the next one.
 
 ### Melee Cleave
@@ -131,25 +141,6 @@ There is no separate "weapon deck" and weapons are never drawn or run out on the
   cards did.
 - A minion still dies to any hit regardless of its size, so a boosted attack can kill more than
   one minion in the same hit (up to the total HP dealt), matching how weapon tiers worked before.
-
----
-
-## End Phase Combat
-
-Reached once all players have played all their equipment for the round (their hands are
-empty) but crabs remain.
-
-1. Players and crabs fight in sudden death — no new crabs enter play.
-2. Starting with the first player, each player either:
-   - draws and reveals the top card of the equipment deck and resolves its effects immediately
-     (same as before — a Melee/Ranged draw attacks with the bonus per "Weapons & Modifiers", a
-     Healing/Protection draw does not), **or**
-   - `[NEW]` skips the draw and attacks with their **default melee weapon** for its flat 1 HP,
-     guaranteeing at least some offense in sudden death instead of relying on a random draw.
-
-   Continue until all players have acted once.
-3. All remaining crabs attack.
-4. Repeat until the round is over (all crabs or all players dead).
 
 ---
 
@@ -236,7 +227,7 @@ Scope for first playtest build: **8 character archetypes**, drafted in `ROSTER.m
   character, and difficulty-based scaling for active-ability use counts.
 - Full boss roster (~8-10 bosses) with abilities/terrain bonuses, universal vs. biome-specific
   split.
-- Exact numbers/tuning: equipment draw counts, crab action counts, minion count per player
-  count, Brawler cleave formula — all per-location/per-player-count values need real numbers
+- Exact numbers/tuning: equipment draw counts, minion count per player count, Brawler cleave
+  formula — all per-location/per-player-count values need real numbers
   before the location and boss card sets can be built. This is expected to happen through
   playtesting once the app exists.

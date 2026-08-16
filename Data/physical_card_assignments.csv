@@ -26,12 +26,12 @@ JH-A,A,Hearts,J,Crab - Minion,MIN-06,Claw Scrapper
 QH-A,A,Hearts,Q,Crab - Minion,MIN-07,Barnacle Biter
 KH-A,A,Hearts,K,Crab - Minion,MIN-08,Husk Crawler
 AD-A,A,Diamonds,A,Crab - Minion,MIN-09,Tide Snapper
-2D-A,A,Diamonds,2,Crab - Action,CA-01,Skitter
-3D-A,A,Diamonds,3,Crab - Action,CA-02,Snap
-4D-A,A,Diamonds,4,Crab - Action,CA-03,Burrow
-5D-A,A,Diamonds,5,Crab - Action,CA-04,Swarm
-6D-A,A,Diamonds,6,Crab - Action,CA-05,Regroup
-7D-A,A,Diamonds,7,Crab - Action,CA-06,Charge
+2D-A,A,Diamonds,2,Unused (Reserved),,
+3D-A,A,Diamonds,3,Unused (Reserved),,
+4D-A,A,Diamonds,4,Unused (Reserved),,
+5D-A,A,Diamonds,5,Unused (Reserved),,
+6D-A,A,Diamonds,6,Unused (Reserved),,
+7D-A,A,Diamonds,7,Unused (Reserved),,
 8D-A,A,Diamonds,8,Location,LOC-01,Dune Wastes
 9D-A,A,Diamonds,9,Location,LOC-02,Rot Marsh
 10D-A,A,Diamonds,10,Location,LOC-03,Frozen Reach
