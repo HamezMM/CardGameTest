@@ -6,10 +6,10 @@ Status: DRAFT — contains open design questions, marked `[OPEN]`. Not final.
 - Damage model: **shared 6HP pool** (not per-limb). Body location just sets hit cost.
 - **No crab action deck.** Every crab in play acts every cycle instead of a drawn card
   determining which one attacks. Combat cycle **loops**: the boss attacks → each player takes
-  an equipment turn (playing a card, or swinging their default weapon once their hand is empty
-  — see "Weapons & Modifiers") → every living minion attacks → repeat, until all crabs or all
-  players are dead. There is no separate End Phase sudden-death stage — the cycle itself never
-  runs out of actions, since a player with an empty hand still swings their default weapon.
+  an equipment turn (playing a card, or swinging their default weapon — see "Weapons &
+  Modifiers") → every living minion attacks → repeat, until all crabs or all players are dead.
+  There is no separate End Phase sudden-death stage — the cycle itself never runs out of
+  actions, since the default weapon swing is always available.
 - Melee/range **position is determined by equipment played** (playing a melee weapon puts you
   in melee position, a ranged weapon puts you in range position) — dynamic, not fixed per
   character or chosen as a formation.
@@ -19,10 +19,12 @@ Status: DRAFT — contains open design questions, marked `[OPEN]`. Not final.
   playing one attacks with the matching default weapon for 1 HP **plus** that card's bonus, then
   the card is discarded (single-use boost, not a permanent attachment). See "Weapons &
   Modifiers" below.
-- **A player's turn plays one equipment card first; only a weapon modifier/ammo card also lets
-  them attack.** Playing a Healing or Protection card is the player's whole turn — no attack
-  that cycle. There is no way to attack without playing a matching modifier/ammo card from
-  hand (same as the old "no weapon card in hand → no attack" constraint).
+- **A player's turn plays one equipment card, or swings their default melee weapon instead —
+  the default melee attack is always available, regardless of what's in hand.** Playing a
+  weapon modifier/ammo card attacks with the matching default weapon plus its bonus; playing a
+  Healing or Protection card is the player's whole turn (no attack that cycle); swinging the
+  default melee weapon lets a player attack for the flat base amount without spending a card,
+  even if they're holding equipment they'd rather save.
 - Crab **complexity lives only on bosses**. Minions stay flat, simple HP creatures with no
   special traits (no resistances/healing/splitting on minions).
 - Position **persists** once set (playing a melee weapon keeps you in melee position until
@@ -98,8 +100,10 @@ drawn card that decides which single crab attacks. Repeats each cycle until the 
 1. The boss attacks, if it's still alive (see Crab Attack Rules for targeting/damage). Skipped
    if the boss has already been killed but minions are still alive to fight.
 2. Each player, clockwise from the round's first player, takes their equipment turn: play one
-   equipment card from hand, **or**, once their hand is empty, swing their **default melee
-   weapon** for its flat 1 HP instead — a player is never skipped for running out of cards.
+   equipment card from hand, **or** swing their **default melee weapon** for its flat 1 HP
+   instead — this option is always on the table, regardless of what's still in hand, so a
+   player is never skipped for running out of cards and is never forced to spend one they'd
+   rather keep.
 3. Every minion still alive attacks (see Crab Attack Rules) — one attack each, not just one
    crab total.
 4. **Confirmed**: this whole cycle repeats (boss attacks → players act → minions attack) until
@@ -136,9 +140,10 @@ There is no separate "weapon deck" and weapons are never drawn or run out on the
   Playing one attacks with the matching default weapon for 1 HP plus that card's bonus (e.g. a
   +1 modifier makes a melee attack deal 2 HP total), then the card is discarded — a single-use
   boost, not a permanent attachment to the weapon.
-- Playing a modifier/ammo card is what lets a player attack that combat cycle (see Combat Turn
-  Order below) — it also sets their position (melee/range), same as the old single-use weapon
-  cards did.
+- Playing a modifier/ammo card lets a player attack with a bonus that combat cycle (see Combat
+  Turn Order below) — it also sets their position (melee/range), same as the old single-use
+  weapon cards did. Swinging the default melee weapon instead is always available as the turn's
+  action and also sets position to melee, but deals only the flat base amount with no bonus.
 - A minion still dies to any hit regardless of its size, so a boosted attack can kill more than
   one minion in the same hit (up to the total HP dealt), matching how weapon tiers worked before.
 

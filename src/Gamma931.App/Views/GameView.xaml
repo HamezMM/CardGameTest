@@ -313,8 +313,8 @@
                                 </ItemsControl>
                             </ScrollViewer>
 
-                            <!-- Guaranteed action once a player's hand is empty (RULES.md "Weapons & Modifiers"):
-                                 swing the default melee weapon instead of playing a card. -->
+                            <!-- Always-available action (RULES.md "Weapons & Modifiers"): swing the default
+                                 melee weapon instead of playing a card, even with cards still in hand. -->
                             <WrapPanel Visibility="{Binding IsPlayerTurnsPhase, Converter={StaticResource BoolToVis}}" Margin="0,0,0,10">
                                 <Button Content="Swing Default Melee — Boss" Command="{Binding AttackMeleeBossCommand}"
                                         Padding="8,4" Margin="0,0,6,0" />

@@ -392,21 +392,15 @@ public sealed class RoundEngine
 
     /// <summary>
     /// RULES.md "Weapons & Modifiers": lets a player swing their default melee weapon for its flat
-    /// <see cref="BaseWeaponDamage"/> with no card played — the guaranteed action a player with an
-    /// empty hand still gets during their equipment turn, instead of being skipped.
+    /// <see cref="BaseWeaponDamage"/> with no card played — always available as their equipment
+    /// turn action, whether or not they still hold equipment cards, so a player can choose it over
+    /// playing a card from hand.
     /// </summary>
     public void AttackWithDefaultMeleeWeapon(GameState state, CombatTarget target = CombatTarget.Boss)
     {
         RequirePhase(state, GamePhase.PlayerTurns);
 
         var player = RequireNextEquipmentPlayer(state);
-        if (player.Hand.Count > 0)
-        {
-            throw new InvalidOperationException(
-                $"{player.Name} still has equipment cards in hand and must play one (see PlayEquipmentFromHand) " +
-                "instead of swinging their default weapon.");
-        }
-
         state.PendingEquipmentTurns.Dequeue();
         player.Position = Position.Melee;
         state.LogEvent($"{player.Name} swings their default melee weapon (no card left to play).");

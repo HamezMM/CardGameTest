@@ -58,9 +58,9 @@ public sealed class GameViewModel : ObservableObject
         }, () => IsPlayerTurnsPhase && _state!.PendingEquipmentTurns.Count > 0);
 
         AttackMeleeBossCommand = new RelayCommand(() => Run(() => _engine.AttackWithDefaultMeleeWeapon(State, CombatTarget.Boss)),
-            () => IsPlayerTurnsPhase && CurrentTurnPlayer is { Hand.Count: 0 });
+            () => IsPlayerTurnsPhase && CurrentTurnPlayer is not null);
         AttackMeleeMinionsCommand = new RelayCommand(() => Run(() => _engine.AttackWithDefaultMeleeWeapon(State, CombatTarget.Minions)),
-            () => IsPlayerTurnsPhase && CurrentTurnPlayer is { Hand.Count: 0 });
+            () => IsPlayerTurnsPhase && CurrentTurnPlayer is not null);
     }
 
     // ---- setup ----

@@ -158,7 +158,7 @@ public class RoundEngineTests
     }
 
     [Fact]
-    public void AttackWithDefaultMeleeWeapon_Throws_WhenPlayerStillHasCardsInHand()
+    public void AttackWithDefaultMeleeWeapon_IsAllowed_WhenPlayerStillHasCardsInHand()
     {
         var db = LoadDb();
         var engine = new RoundEngine(new Random(3));
@@ -173,8 +173,16 @@ public class RoundEngineTests
         Assert.Equal(GamePhase.PlayerTurns, state.Phase);
         var player = state.PendingEquipmentTurns.Peek();
         Assert.NotEmpty(player.Hand); // fresh hand from DrawEquipmentForAllPlayers
+        var handBefore = player.Hand.Count;
+        var startingBossHp = state.CurrentBossHp;
 
-        Assert.Throws<InvalidOperationException>(() => engine.AttackWithDefaultMeleeWeapon(state, CombatTarget.Boss));
+        engine.AttackWithDefaultMeleeWeapon(state, CombatTarget.Boss);
+
+        // The default melee attack is always available — it doesn't consume or require an
+        // empty hand.
+        Assert.Equal(handBefore, player.Hand.Count);
+        Assert.Equal(Position.Melee, player.Position);
+        Assert.Equal(Math.Max(0, startingBossHp - 1), state.CurrentBossHp);
     }
 
     [Fact]
